@@ -1,0 +1,65 @@
+﻿@using System.Data
+@model DataTable
+@{
+    Layout = "~/Views/Shared/_BootstrapLayout.cshtml";
+    ViewBag.Title = "基金卖出建议";
+}
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table-striped">
+        <thead>
+            <tr>
+                @foreach (DataColumn col in Model.Columns)
+                {
+                    <th>@col.ColumnName</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (DataRow row in Model.Rows)
+            {
+                var fundCode = row["基金编码"];
+                var dkhsCode = row["DkhsCode"];
+                <tr>
+                    @foreach (DataColumn col in Model.Columns)
+                    {
+                        if (col.ColumnName == "基金编码")
+                        {
+                            <td>
+                                @Html.Raw(row[col.ColumnName])
+
+                            </td>
+                        }
+                        else if (col.ColumnName == "估收益比")
+                        {
+                            <td>
+                                @Html.Raw(row[col.ColumnName])
+
+                            </td>
+                        }
+                        else if (col.ColumnName == "估收益")
+                        {
+                            <td>
+                                @Html.Raw(row[col.ColumnName])
+                                <a href='https://m.1234567.com.cn/index.html?page=jjxq&code=@fundCode' target="_blank">天天基金</a>
+                                @*<a href='https://m.howbuy.com/fund/@(fundCode)/' target="_blank">掌上基金</a>*@
+                                <a href='https://www.dkhs.com/s/@dkhsCode' target="_blank">基金决策宝</a>
+                                <a href="https://www.dkhs.com/s/@dkhsCode/achievement_rank/" target="_blank">业绩排名</a>
+                                <a href="https://www.dkhs.com/symbols/funds/diagnosis/detail/@dkhsCode/" target="_blank">诊断</a>
+                                <a href=' https://www.dkhs.com/s/@dkhsCode/managers_achivements_history/' target="_blank">经理变动</a>
+                                <a href="https://www.dkhs.com/s/@dkhsCode/netvalue_history/" target="_blank"> 历史净值</a>
+                                <a href=' https://www.dkhs.com/s/@dkhsCode/asset_allocation/' target="_blank">资产配置</a>
+                            </td>
+                        }
+                        else
+                        {
+                            <td>
+                                @Html.Raw(row[col.ColumnName])
+                            </td>
+                        }
+
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
