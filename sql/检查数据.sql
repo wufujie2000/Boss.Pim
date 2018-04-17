@@ -30,7 +30,3 @@ WHERE Date > ''
 
 
 
-SELECT MIN(CreationTime)
-FROM dbo.FundCenter_NetWorths;
-
-

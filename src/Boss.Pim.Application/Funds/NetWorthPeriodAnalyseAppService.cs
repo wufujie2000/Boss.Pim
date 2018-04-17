@@ -55,6 +55,7 @@ namespace Boss.Pim.Funds
 
         private async Task<bool> DownloadByPager(int page, int size)
         {
+            bool isLast = false;
             Logger.Info($"开始下载 NetWorthPeriodAnalyse 第{page}页，每页{size}条");
             using (var conn = new SqlConnection(SQLUtil.DefaultConnStr))
             {
@@ -71,14 +72,17 @@ WHERE Id IN
       );
             ");
                 var funds = FundDomainService.GetQuery().OrderBy(a => a.Id).PageIndex(page, size).Select(a => a.Code).ToList();
-                if (funds.Count <= 0)
+                if (funds.Count < size)
                 {
-                    return true;
+                    isLast = true;
                 }
-                await Insert(funds);
+                if (funds.Count > 0)
+                {
+                    await Insert(funds);
+                }
             }
             Logger.Info($"NetWorthPeriodAnalyse 下载完成 第{page}页，每页{size}条");
-            return false;
+            return isLast;
         }
 
         public async Task Insert(ICollection<string> funds)
