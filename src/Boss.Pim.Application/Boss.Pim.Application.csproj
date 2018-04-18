@@ -202,13 +202,19 @@
   <ItemGroup>
     <Compile Include="Funds\Dto\FundAllocationDto.cs" />
     <Compile Include="Funds\Dto\NetWorthPeriodAnalyseDto.cs" />
+    <Compile Include="Funds\Dto\TradeLogBuyInput.cs" />
+    <Compile Include="Funds\Dto\TradeLogQueryDto.cs" />
+    <Compile Include="Funds\Dto\TradeLogSellInput.cs" />
+    <Compile Include="Funds\Dto\TradeLogTransferInput.cs" />
+    <Compile Include="Funds\Dto\TradeLogDto.cs" />
     <Compile Include="Funds\Dto\TradeRecordCreateInput.cs" />
     <Compile Include="Funds\Dto\TradeRecordUpdateInput.cs" />
     <Compile Include="Funds\FundAllocationAppService.cs" />
     <Compile Include="Funds\IFundAllocationAppService.cs" />
     <Compile Include="Funds\ITradeRateAppService.cs" />
+    <Compile Include="Funds\ITradeLogAppService.cs" />
     <Compile Include="Funds\TradeRateAppService.cs" />
-    <Compile Include="Funds\TradeRecordAppService.cs" />
+    <Compile Include="Funds\TradeLogAppService.cs" />
     <Compile Include="Funds\NetWorthPeriodAnalyseAppService.cs" />
     <Compile Include="Funds\Dto\AnalyseDto.cs" />
     <Compile Include="Funds\Dto\FundDto.cs" />
@@ -220,7 +226,6 @@
     <Compile Include="Funds\Dto\TradeRateDto.cs" />
     <Compile Include="Funds\Dto\TradeRecordDto.cs" />
     <Compile Include="Funds\Dto\ValuationDto.cs" />
-    <Compile Include="Funds\ITradeRecordAppService.cs" />
     <Compile Include="Funds\INetWorthPeriodAnalyseAppService.cs" />
     <Compile Include="Funds\ValuationAppService.cs" />
     <Compile Include="Funds\IValuationAppService.cs" />

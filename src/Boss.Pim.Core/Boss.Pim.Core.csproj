@@ -183,6 +183,7 @@
     <Compile Include="Attributes\DecimalPrecisionAttribute.cs" />
     <Compile Include="Extensions\DataRowExtension.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
+    <Compile Include="Extensions\FloatExtensions.cs" />
     <Compile Include="Extensions\DecimalExtensions.cs" />
     <Compile Include="Extensions\QueryableExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
@@ -205,6 +206,7 @@
     <Compile Include="Funds\RatingPool.cs" />
     <Compile Include="Funds\NetWorth.cs" />
     <Compile Include="Funds\TradeRate.cs" />
+    <Compile Include="Funds\TradeLog.cs" />
     <Compile Include="Funds\TradeRecord.cs" />
     <Compile Include="Funds\Valuation.cs" />
     <Compile Include="PimConsts.cs" />

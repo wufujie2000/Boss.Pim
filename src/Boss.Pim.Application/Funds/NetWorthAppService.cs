@@ -26,7 +26,7 @@ namespace Boss.Pim.Funds
         [UnitOfWork(false)]
         public async Task Download3Days()
         {
-            Logger.Info("开始下载更新 Fund ");
+            Logger.Info("开始下载更新 NetWorth ");
             IQueryable<Fund> fundsQuery = await FundDomainService.GetFundsQuery();
             var list = await AsyncQueryableExecuter.ToListAsync(fundsQuery.Select(a => new { a.Code, a.DkhsCode }));
             foreach (var fund in list)
@@ -44,7 +44,7 @@ namespace Boss.Pim.Funds
                     Logger.Error(fund.Code + " " + e.Message, e);
                 }
             }
-            Logger.Info("更新 Fund 完成");
+            Logger.Info("更新 NetWorth 完成");
         }
 
         public async Task DownloadByDays(string fundCode, int page, int size)

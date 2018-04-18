@@ -36,7 +36,7 @@ namespace Boss.Pim.Funds
             }
         }
 
-        private async Task DownloadByFuncode(string fund)
+        public async Task DownloadByFuncode(string fund)
         {
             try
             {
@@ -191,16 +191,34 @@ namespace Boss.Pim.Funds
                     var maxDayRange = -1;
                     if (!string.IsNullOrWhiteSpace(shitem.time))
                     {
-                        minDayRange = GetDays(shitem.time.Substring(0, 6));
-                        var maxTxt = shitem.time.Substring(7);
-                        if (minDayRange == -1 && (maxTxt.IndexOf(">") >= 0 || maxTxt.IndexOf("≥") >= 0))
+                        var dayuStrs = shitem.time.Split('>', '≥');
+                        if (dayuStrs.Length == 2)
                         {
-                            minDayRange = GetDays(maxTxt);
+                            //单项大于 最小值
+                            minDayRange = GetDays(shitem.time);
                         }
-                        else
+                        var xiaoyuStrs = shitem.time.Split('<', '≤');
+                        if (xiaoyuStrs.Length == 2)
                         {
-                            maxDayRange = GetDays(maxTxt);
+                            //单项小于 最小值
+                            maxDayRange = GetDays(shitem.time);
                         }
+                        else if (xiaoyuStrs.Length == 3)
+                        {
+                            minDayRange = GetDays(xiaoyuStrs[0]);
+                            maxDayRange = GetDays(xiaoyuStrs[2]);
+                        }
+
+                        //minDayRange = GetDays(shitem.time.Substring(0, 6));
+                        //var maxTxt = shitem.time.Substring(7);
+                        //if (minDayRange == -1 && (maxTxt.IndexOf(">") >= 0 || maxTxt.IndexOf("≥") >= 0))
+                        //{
+                        //    minDayRange = GetDays(maxTxt);
+                        //}
+                        //else
+                        //{
+                        //    maxDayRange = GetDays(maxTxt);
+                        //}
                     }
 
                     modellist.Add(new TradeRate

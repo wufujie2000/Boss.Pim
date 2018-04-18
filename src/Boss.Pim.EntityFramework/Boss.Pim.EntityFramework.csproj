@@ -226,6 +226,14 @@
     <Compile Include="Migrations\201804151544301_fundRank.Designer.cs">
       <DependentUpon>201804151544301_fundRank.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201804170530032_updateTrade.cs" />
+    <Compile Include="Migrations\201804170530032_updateTrade.Designer.cs">
+      <DependentUpon>201804170530032_updateTrade.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201804181619236_AddTradeLog.cs" />
+    <Compile Include="Migrations\201804181619236_AddTradeLog.Designer.cs">
+      <DependentUpon>201804181619236_AddTradeLog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\AbpZeroDbMigrator.cs" />
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="PimDataModule.cs" />
@@ -263,6 +271,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201804151544301_fundRank.resx">
       <DependentUpon>201804151544301_fundRank.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201804170530032_updateTrade.resx">
+      <DependentUpon>201804170530032_updateTrade.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201804181619236_AddTradeLog.resx">
+      <DependentUpon>201804181619236_AddTradeLog.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

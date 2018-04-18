@@ -30,3 +30,59 @@ WHERE Date > ''
 
 
 
+
+
+--É¾³ýÖØ¸´¾»Öµ·ÖÎö
+DELETE dbo.FundCenter_NetWorthPeriodAnalyses
+WHERE Id IN
+      (
+          SELECT MAX(CONVERT(VARCHAR(64), Id))
+          FROM dbo.FundCenter_NetWorthPeriodAnalyses
+          GROUP BY FundCode,
+                   PeriodStartDate,
+                   PeriodDays
+          HAVING COUNT(1) > 1
+      );
+
+
+
+--É¾³ýÖØ¸´¾»Öµ
+DELETE dbo.FundCenter_NetWorths
+WHERE Id IN
+      (
+          SELECT MAX(CONVERT(VARCHAR(64), Id))
+          FROM dbo.FundCenter_NetWorths
+          GROUP BY FundCode,
+                   Date
+          HAVING COUNT(1) > 1
+      );
+
+
+
+--É¾³ýÖØ¸´ÅÅÃû
+DELETE dbo.FundCenter_FundRanks
+WHERE Id IN
+      (
+          SELECT MAX(CONVERT(VARCHAR(64), Id))
+          FROM dbo.FundCenter_FundRanks
+          GROUP BY FundCode,
+                   Date
+          HAVING COUNT(1) > 1
+      );
+
+
+------É¾³ýÖØ¸´ÕÇ·ùÅÅÃû
+DELETE dbo.FundCenter_PeriodIncreases
+WHERE Id IN
+      (
+          SELECT MAX(CONVERT(VARCHAR(64), Id))
+          FROM dbo.FundCenter_PeriodIncreases
+          GROUP BY Title,
+                   FundCode,
+                   ClosingDate
+          HAVING COUNT(1) > 1
+      );
+
+
+
+

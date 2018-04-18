@@ -1,22 +1,21 @@
 ﻿using System;
 using System.Threading;
 using Abp.Dependency;
-using Abp.Domain.Uow;
 using Abp.Threading;
 using Abp.Threading.BackgroundWorkers;
 using Abp.Threading.Timers;
 
 namespace Boss.Pim.Funds.Workers
 {
-    public class ValuationWorker : PeriodicBackgroundWorkerBase, ISingletonDependency
+    public class RatingPoolWorker : PeriodicBackgroundWorkerBase, ISingletonDependency
     {
-        public IValuationAppService AppService { get; set; }
+        public IRatingPoolAppService IRatingPoolAppService { get; set; }
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="timer"></param>
-        public ValuationWorker(AbpTimer timer)
+        public RatingPoolWorker(AbpTimer timer)
         : base(timer)
         {
             Timer.Period = 60 * 1000;
@@ -31,23 +30,22 @@ namespace Boss.Pim.Funds.Workers
         {
             lock (doworklock)
             {
+                var now = DateTime.Now;
+                if (now.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    return;
+                }
                 try
                 {
-                    var now = DateTime.Now;
-                    if (now.DayOfWeek == DayOfWeek.Sunday || now.DayOfWeek == DayOfWeek.Saturday)
+                    if ((now.Hour == 0 && now.Minute == 30))
                     {
-                        return;
-                    }
-                    if ((now.Hour == 10 && now.Minute == 30))
-                    {
-                        AsyncHelper.RunSync(() => AppService.DownloadAllFundEasyMoney());
+                        AsyncHelper.RunSync(() => IRatingPoolAppService.DownloadStockstar());
                     }
                 }
                 catch (Exception ex)
                 {
                     Logger.Error(ex.Message, ex);
                 }
-                Thread.Sleep(60 * 1000);
             }
         }
     }

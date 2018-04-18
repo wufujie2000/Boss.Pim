@@ -59,6 +59,7 @@ namespace Boss.Pim.EntityFramework
         public virtual IDbSet<PeriodIncrease> PeriodIncreases { get; set; }
         public virtual IDbSet<RatingPool> RatingPools { get; set; }
         public virtual IDbSet<TradeRate> TradeRates { get; set; }
+        public virtual IDbSet<TradeLog> TradeLogs { get; set; }
         public virtual IDbSet<TradeRecord> TradeRecords { get; set; }
         public virtual IDbSet<Valuation> Valuations { get; set; }
 
@@ -99,6 +100,7 @@ namespace Boss.Pim.EntityFramework
                 , typeof(PeriodIncrease)
                 , typeof(RatingPool)
                 , typeof(TradeRate)
+                , typeof(TradeLog)
                 , typeof(TradeRecord)
                 , typeof(Valuation)
                 );

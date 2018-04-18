@@ -8,7 +8,7 @@ using Abp.Threading.Timers;
 
 namespace Boss.Pim.Funds.Workers
 {
-    public class ValuationWorker : PeriodicBackgroundWorkerBase, ISingletonDependency
+    public class ValuationDetailWorker : PeriodicBackgroundWorkerBase, ISingletonDependency
     {
         public IValuationAppService AppService { get; set; }
 
@@ -16,20 +16,20 @@ namespace Boss.Pim.Funds.Workers
         /// 构造函数
         /// </summary>
         /// <param name="timer"></param>
-        public ValuationWorker(AbpTimer timer)
+        public ValuationDetailWorker(AbpTimer timer)
         : base(timer)
         {
-            Timer.Period = 60 * 1000;
+            Timer.Period = 60 * 1000 * 3;
         }
 
-        private object doworklock = new object();
+        private readonly object _doWorkLock = new object();
 
         /// <summary>
         /// 循环执行
         /// </summary>
         protected override void DoWork()
         {
-            lock (doworklock)
+            lock (_doWorkLock)
             {
                 try
                 {
@@ -38,9 +38,13 @@ namespace Boss.Pim.Funds.Workers
                     {
                         return;
                     }
-                    if ((now.Hour == 10 && now.Minute == 30))
+                    if ((now.Hour == 11 && now.Minute > 30 && now.Minute < 55)
+                        || (now.Hour == 12 && now.Minute < 40 && now.Minute > 5)
+                        || (now.Hour == 14)
+                        || (now.Hour == 15 && now.Minute < 10)
+                        )
                     {
-                        AsyncHelper.RunSync(() => AppService.DownloadAllFundEasyMoney());
+                        AsyncHelper.RunSync(() => AppService.DownloadOptionalEasyMoney());
                     }
                 }
                 catch (Exception ex)

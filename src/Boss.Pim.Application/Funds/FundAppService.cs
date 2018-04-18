@@ -40,32 +40,24 @@ namespace Boss.Pim.Funds
             }
         }
 
-        public async Task SetNotTradeFunds(List<string> fundCodes)
-        {
-            var sourcePlatform = "蚂蚁金服";
-            foreach (var item in fundCodes)
-            {
-                if (!NotTradeFundRepository.GetAll().Any(a => a.FundCode == item && a.SourcePlatform == sourcePlatform))
-                {
-                    await NotTradeFundRepository.InsertAsync(new NotTradeFund
-                    {
-                        FundCode = item,
-                        SourcePlatform = sourcePlatform
-                    });
-                }
-            }
-        }
-
         public async Task SetNotTradeFund(string fundCodes)
         {
+            var codes = fundCodes.ToStringArray();
+            var funds = Repository.GetAll().Where(a => codes.Contains(a.Code)).Select(b => b.Code).ToList();
             var sourcePlatform = "蚂蚁金服";
-            if (!NotTradeFundRepository.GetAll().Any(a => a.FundCode == fundCodes && a.SourcePlatform == sourcePlatform))
+            if (funds.Any())
             {
-                await NotTradeFundRepository.InsertAsync(new NotTradeFund
+                foreach (var item in funds)
                 {
-                    FundCode = fundCodes,
-                    SourcePlatform = sourcePlatform
-                });
+                    if (!NotTradeFundRepository.GetAll().Any(a => item == a.FundCode && a.SourcePlatform == sourcePlatform))
+                    {
+                        await NotTradeFundRepository.InsertAsync(new NotTradeFund
+                        {
+                            FundCode = item,
+                            SourcePlatform = sourcePlatform
+                        });
+                    }
+                }
             }
         }
 
@@ -119,7 +111,7 @@ namespace Boss.Pim.Funds
                 await InsertOrUpdateAnalyses(data);
 
                 await InsertFunds(data);
-                
+
                 if (data.current_page > data.total_page || data.results.Length < size)
                 {
                     Logger.Info("更新所有基金 完成");

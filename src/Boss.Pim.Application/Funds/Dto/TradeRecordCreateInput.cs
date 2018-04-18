@@ -21,12 +21,32 @@ namespace Boss.Pim.Funds.Dto
         /// <summary>
         /// 购买时间
         /// </summary>
-        public DateTime BuyTime { get; set; } = DateTime.Now;
+        public DateTime BuyTime { get; set; }
+
+        /// <summary>
+        /// 购买时的单位净值
+        /// </summary>
+        public float BuyUnitNetWorth { get; set; }
 
         /// <summary>
         /// 购买金额
         /// </summary>
         public float BuyAmount { get; set; }
+
+        /// <summary>
+        /// 确认金额
+        /// </summary>
+        public float ConfirmAmount { get; set; }
+
+        /// <summary>
+        /// 确认份额
+        /// </summary>
+        public float ConfirmShare { get; set; }
+
+        /// <summary>
+        /// 购买手续费
+        /// </summary>
+        public float BuyServiceCharge { get; set; }
 
         /// <summary>
         /// 交易记录类型

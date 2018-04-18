@@ -9,9 +9,7 @@ namespace Boss.Pim.Funds
     {
         Task Download();
         Task SetOptional(List<string> fundCodes);
-        Task SetNotTradeFunds(List<string> fundCodes);
         Task SetNotTradeFund(string fundCode);
 
-        //void EastmoneyGet(string code);
     }
 }

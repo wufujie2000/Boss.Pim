@@ -1,3 +1,45 @@
+ï»¿using System;
+using System.Threading;
+using Abp.Dependency;
+using Abp.Domain.Uow;
+using Abp.Threading;
+using Abp.Threading.BackgroundWorkers;
+using Abp.Threading.Timers;
+using Boss.Pim.AdoNet;
+
+namespace Boss.Pim.Funds.Workers
+{
+    public class SetOptionalWorker : PeriodicBackgroundWorkerBase, ISingletonDependency
+    {
+        /// <summary>
+        /// æ„é€ å‡½æ•°
+        /// </summary>
+        /// <param name="timer"></param>
+        public SetOptionalWorker(AbpTimer timer)
+        : base(timer)
+        {
+            Timer.Period = 60 * 1000;
+        }
+
+        private object doworklock = new object();
+
+        /// <summary>
+        /// å¾ªç¯æ‰§è¡Œ
+        /// </summary>
+        protected override void DoWork()
+        {
+            lock (doworklock)
+            {
+                var now = DateTime.Now;
+                if (now.DayOfWeek == DayOfWeek.Sunday || now.DayOfWeek == DayOfWeek.Saturday)
+                {
+                    return;
+                }
+                if ((now.Hour == 9 && now.Minute == 20))
+                {
+                    try
+                    {
+                        var sql = @"
 UPDATE dbo.FundCenter_Funds
 SET IsOptional = 0
 WHERE IsOptional = 1;
@@ -6,9 +48,9 @@ WHERE IsOptional = 1;
 UPDATE dbo.FundCenter_Funds
 SET IsOptional = 1
 WHERE IsOptional = 0
-      --ÕâĞ©·ÖÀàÕÇ·ù¶¼ºÜĞ¡
-      AND TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒĞÍ', 'Àí²ÆĞÍ', 'ÆäËû´´ĞÂ', 'Õ®È¯´´ĞÂ-³¡ÄÚ', 'ÆäËû' )
-      --ÓÉÓÚÆÀ·Ö´ó¶à¸ù¾İÀúÊ·Òµ¼¨¼ÆËãµÄ£¬ÈİÒ×¹ıÂËµôĞÂµÄÇ±Á¦»ù½ğ£¬Òò´ËÔİÊ±È¥µô´ËÌõ¼ş
+      --è¿™äº›åˆ†ç±»æ¶¨å¹…éƒ½å¾ˆå°
+      AND TypeName NOT IN ( 'æ··åˆ-FOF', 'è´§å¸å‹', 'ç†è´¢å‹', 'å…¶ä»–åˆ›æ–°', 'å€ºåˆ¸åˆ›æ–°-åœºå†…', 'å…¶ä»–' )
+      --ç”±äºè¯„åˆ†å¤§å¤šæ ¹æ®å†å²ä¸šç»©è®¡ç®—çš„ï¼Œå®¹æ˜“è¿‡æ»¤æ‰æ–°çš„æ½œåŠ›åŸºé‡‘ï¼Œå› æ­¤æš‚æ—¶å»æ‰æ­¤æ¡ä»¶
       --AND Code IN
       --    (
       --        SELECT FundCode FROM dbo.FundCenter_Analyses WHERE Score > 75
@@ -99,7 +141,7 @@ WHERE IsOptional = 0
                  )
               OR Code IN
                  (
-                     --Òµ¼¨ÅÅÃû¿¼Ç°µÄ»ù½ğ
+                     --ä¸šç»©æ’åè€ƒå‰çš„åŸºé‡‘
                      SELECT DISTINCT
                          per.FundCode
                      FROM FundCenter_PeriodIncreases per
@@ -107,70 +149,19 @@ WHERE IsOptional = 0
                            AND ROUND((CONVERT(FLOAT, per.Rank) / CONVERT(FLOAT, per.SameTypeTotalQty)), 5) < 0.0446
                            AND per.Title IN ( 'Z', 'Y', '3Y', '6Y' )
                  )
-          );
+          )
+";
 
-
-UPDATE dbo.FundCenter_Funds
-SET IsOptional = 1
-WHERE IsOptional = 0
-      AND Code IN
-          (
-              SELECT DISTINCT FundCode FROM dbo.FundCenter_TradeRecords
-          );
-
-
-SELECT fun.TypeName »ù½ğ·ÖÀà,
-       fun.Code »ù½ğ±àÂë,
-       fun.ShortName »ù½ğÃû³Æ,
-       ROUND((CONVERT(FLOAT, per.Rank) / CONVERT(FLOAT, per.SameTypeTotalQty)), 5),
-       per.Rank,
-       per.SameTypeTotalQty,
-       per.ReturnRate,
-       per.Title
-FROM dbo.FundCenter_Funds fun
-    INNER JOIN FundCenter_PeriodIncreases per
-        ON per.FundCode = fun.Code
-    INNER JOIN dbo.FundCenter_Analyses ana
-        ON ana.FundCode = fun.Code
-WHERE Rank > 0
-      AND fun.TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒĞÍ', 'Àí²ÆĞÍ', 'ÆäËû´´ĞÂ', 'Õ®È¯´´ĞÂ-³¡ÄÚ', 'ÆäËû' )
-      --AND fun.Code IN
-      --    (
-      --        SELECT DISTINCT
-      --            per.FundCode
-      --        FROM dbo.FundCenter_PeriodIncreases per
-      --        WHERE (
-      --                  per.Title IN ( N'Z' )
-      --                  AND ISNULL(per.ReturnRate, 999) >= 5
-      --                  OR per.Title IN ( N'Y' )
-      --                     AND ISNULL(per.ReturnRate, 999) >= 6
-      --                  OR per.Title IN ( N'3Y' )
-      --                     AND ISNULL(per.ReturnRate, 999) >= 7
-      --                  OR per.Title IN ( N'6Y' )
-      --                     AND ISNULL(per.ReturnRate, 999) >= 8
-      --                  OR per.Title IN ( N'1N' )
-      --                     AND ISNULL(per.ReturnRate, 999) >= 20
-      --                  OR per.Title IN ( N'2N' )
-      --                     AND ISNULL(per.ReturnRate, 999) >= 40
-      --              )
-      --    )
-      --AND fun.IsOptional = 0
-      --AND ana.Score < 60
-      AND ROUND((CONVERT(FLOAT, per.Rank) / CONVERT(FLOAT, per.SameTypeTotalQty)), 5) < 0.0446
-      AND per.Title IN ( 'Z', 'Y', '3Y', '6Y' )
-      AND fun.Code IN ( '519601' )
-ORDER BY ROUND((CONVERT(FLOAT, per.Rank) / CONVERT(FLOAT, per.SameTypeTotalQty)), 5);
-
-
-
-
-
-
---SELECT *
---FROM dbo.FundCenter_Funds
---WHERE TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒĞÍ', 'Àí²ÆĞÍ', 'ÆäËû´´ĞÂ', 'Õ®È¯´´ĞÂ-³¡ÄÚ', 'ÆäËû' )
---      AND Code NOT IN
---          (
---              SELECT FundCode FROM dbo.FundCenter_NotTradeFunds
---          );
-
+                        SQLUtil db = new SQLUtil();
+                        db.ExecNonQuery(sql);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex.Message, ex);
+                    }
+                    Thread.Sleep(60 * 1000);
+                }
+            }
+        }
+    }
+}

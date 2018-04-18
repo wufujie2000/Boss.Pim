@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 using Abp.Dependency;
 using Abp.Domain.Repositories;
+using Boss.Pim.Extensions;
 
 namespace Boss.Pim.Funds.DomainServices
 {
@@ -91,23 +92,23 @@ namespace Boss.Pim.Funds.DomainServices
                 PeriodDays = days,
                 PeriodStartDate = startDate.Date,
 
-                Avg = avg,
-                BoWave = bowave,
-                DieFu = diefu,
-                GreatBuy = greatbuy,
-                GreatSale = greatsale,
-                Later = later,
-                Max = max,
-                MaxAvg = maxavg,
-                MaxLoseCent = maxlosecent,
-                MaxPayCent = maxpaycent,
-                Min = min,
-                MinAvg = minavg,
-                PayWaveRate = paywaverate,
-                SafeHigh = safehigh,
-                SafeLow = safelow,
-                SafeTradeCent = safetradecent,
-                ZhangFu = zhangfu
+                Avg = avg.RoundDigits(),
+                BoWave = bowave.RoundDigits(),
+                DieFu = diefu.RoundDigits(),
+                GreatBuy = greatbuy.RoundDigits(),
+                GreatSale = greatsale.RoundDigits(),
+                Later = later.RoundDigits(),
+                Max = max.RoundDigits(),
+                MaxAvg = maxavg.RoundDigits(),
+                MaxLoseCent = maxlosecent.RoundDigits(),
+                MaxPayCent = maxpaycent.RoundDigits(),
+                Min = min.RoundDigits(),
+                MinAvg = minavg.RoundDigits(),
+                PayWaveRate = paywaverate.RoundDigits(),
+                SafeHigh = safehigh.RoundDigits(),
+                SafeLow = safelow.RoundDigits(),
+                SafeTradeCent = safetradecent.RoundDigits(),
+                ZhangFu = zhangfu.RoundDigits()
             };
         }
 

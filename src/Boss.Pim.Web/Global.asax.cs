@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Threading;
-using Abp.Castle.Logging.Log4Net;
+using System.Configuration;
 using Abp.Web;
-using Abp.WebApi.Validation;
 using Castle.Facilities.Logging;
 
 namespace Boss.Pim.Web
@@ -11,10 +9,11 @@ namespace Boss.Pim.Web
     {
         protected override void Application_Start(object sender, EventArgs e)
         {
-            AbpBootstrapper.IocManager.IocContainer.AddFacility<LoggingFacility>(
-                f => f.UseAbpLog4Net().WithConfig(Server.MapPath("log4net.config"))
-            );
-            
+            AbpBootstrapper.IocManager
+.IocContainer.AddFacility<LoggingFacility>(f =>
+f.UseNLog()
+.WithConfig(ConfigurationManager.AppSettings["NLogConfigFilePath"]));
+
             base.Application_Start(sender, e);
         }
     }

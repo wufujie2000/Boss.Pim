@@ -15,6 +15,8 @@ using Castle.MicroKernel.Registration;
 using Hangfire;
 using Microsoft.Owin.Security;
 using Abp.Runtime.Caching.Redis;
+using Abp.Threading.BackgroundWorkers;
+using Boss.Pim.Funds.Workers;
 
 namespace Boss.Pim.Web
 {
@@ -41,7 +43,6 @@ namespace Boss.Pim.Web
             {
                 configuration.GlobalConfiguration.UseSqlServerStorage("HangfireDb");
             });
-            Configuration.BackgroundJobs.IsJobExecutionEnabled = false;
 
             //Uncomment this line to use Redis cache instead of in-memory cache.
             Configuration.Caching.UseRedis();
@@ -63,6 +64,21 @@ namespace Boss.Pim.Web
             AreaRegistration.RegisterAllAreas();
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+        }
+
+        public override void PostInitialize()
+        {
+            var workManager = IocManager.Resolve<IBackgroundWorkerManager>();
+
+            workManager.Add(IocManager.Resolve<FundWorker>());
+            workManager.Add(IocManager.Resolve<NetWorthPeriodAnalyseWorker>());
+            workManager.Add(IocManager.Resolve<NetWorthWorker>());
+            workManager.Add(IocManager.Resolve<PeriodIncreaseWorker>());
+            workManager.Add(IocManager.Resolve<RatingPoolWorker>());
+            workManager.Add(IocManager.Resolve<SetOptionalWorker>());
+            workManager.Add(IocManager.Resolve<ValuationDetailWorker>());
+            workManager.Add(IocManager.Resolve<ValuationWorker>());
+            workManager.Add(IocManager.Resolve<FundRankWorker>());
         }
     }
 }

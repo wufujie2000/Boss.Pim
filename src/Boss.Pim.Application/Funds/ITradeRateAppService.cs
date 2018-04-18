@@ -10,8 +10,9 @@ namespace Boss.Pim.Funds
     public interface ITradeRateAppService : IAsyncCrudAppService<TradeRateDto>
     {
         Task DownloadTrade();
-         Task Download();
+        Task Download();
         Task DownloadOptional();
         Task DownloadByFundCode(List<string> fundCodes);
+        Task DownloadByFuncode(string fund);
     }
 }
