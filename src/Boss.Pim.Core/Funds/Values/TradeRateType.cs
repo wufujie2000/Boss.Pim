@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Boss.Pim.Funds.ObjectValues
+﻿namespace Boss.Pim.Funds.Values
 {
     /// <summary>
     /// 交易费率类型

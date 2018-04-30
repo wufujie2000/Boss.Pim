@@ -1,5 +1,5 @@
 ﻿using Abp.AutoMapper;
-using Boss.Pim.Funds.ObjectValues;
+using Boss.Pim.Funds.Values;
 
 namespace Boss.Pim.Funds.Dto
 {

@@ -11,14 +11,18 @@ using Abp.AutoMapper;
 using Abp.Domain.Repositories;
 using Abp.Web.Mvc.Authorization;
 using Boss.Pim.AdoNet;
+using Boss.Pim.Extensions;
 using Boss.Pim.Funds;
 using Boss.Pim.Funds.Dto;
+using Boss.Pim.Funds.Values;
 
 namespace Boss.Pim.Web.Controllers
 {
     public class FundController : PimControllerBase
     {
         public ITradeLogAppService TradeLogAppService { get; set; }
+
+        public IRepository<NetWorthPeriodAnalyse, Guid> NetWorthPeriodAnalyseRepository { get; set; }
 
         public async Task<ActionResult> Index()
         {
@@ -125,14 +129,14 @@ SELECT TOP 500
     val.ReturnRate 估值涨幅,
     ROUND((1 / val.EstimatedUnitNetWorth - 1 / #dtGreat.GreatSale) * 100, 3) 收益和,
     ROUND((1 / val.EstimatedUnitNetWorth - 1 / #dtGreat.GreatBuy), 3) 建议和,
-    ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 1) 近3月排比,
-    ROUND(CONVERT(FLOAT, ISNULL(y6.Rank, -1)) / y6.SameTypeTotalQty, 1) 近6月排比,
-    ROUND(CONVERT(FLOAT, ISNULL(y.Rank, -1)) / y.SameTypeTotalQty, 1) 近1月排比,
     y3.Rank 近3月排名,
     y6.Rank 近6月排名,
     y.Rank 近1月排名,
     z.Rank 近1周排名,
     n1.Rank 近1年排名,
+    ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 1) 近3月排比,
+    ROUND(CONVERT(FLOAT, ISNULL(y6.Rank, -1)) / y6.SameTypeTotalQty, 1) 近6月排比,
+    ROUND(CONVERT(FLOAT, ISNULL(y.Rank, -1)) / y.SameTypeTotalQty, 1) 近1月排比,
     rate.Title 费率,
     rate.Rate 费率,
     fun.TypeName 基金分类,
@@ -283,7 +287,7 @@ FROM dbo.FundCenter_Funds fun
                                    '200万 ≤ 购买金额 < 500万', '50万 ≤ 购买金额 < 200万', '100万 ≤ 购买金额 < 300万',
                                    '300万 ≤ 购买金额 < 500万', '50万 ≤ 购买金额 < 100万', '50万 ≤ 购买金额 < 250万',
                                    '250万 ≤ 购买金额 < 500万', '50万 ≤ 购买金额 < 500万', '100万 ≤ 购买金额 < 1000万', '购买金额 ≥ 500万',
-                                   '100万 ≤ 购买金额 < 250万'
+                                   '100万 ≤ 购买金额 < 250万', '10万美元 ≤ 购买金额 < 30万美元', '30万美元 ≤ 购买金额 < 60万美元'
                                  )
 WHERE fun.TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创新', '债券创新-场内', '其他' )
       --AND fun.IsOptional = 1
@@ -308,15 +312,15 @@ WHERE fun.TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创�
       --                     AND ISNULL(per.ReturnRate, 999) >= 40
       --              )
       --    )
-      --AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(y6.Rank, -1)) / y6.SameTypeTotalQty, 2), 0) < 0.2
-      --AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 2), 0) < 0.3
-      --AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(y.Rank, -1)) / y.SameTypeTotalQty, 2), 0) < 0.2
-      --AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(z.Rank, -1)) / z.SameTypeTotalQty, 2), 0) < 0.3
-      --AND z.Rank > 0
-      --      AND val.EstimatedUnitNetWorth IS NOT NULL
-      --AND val.EstimatedTime<GETDATE()-0.5
-      --AND y.ReturnRate < -8
-      --AND ana.Score > 71
+      AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(y6.Rank, -1)) / y6.SameTypeTotalQty, 2), 0) < 0.3
+      AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 2), 0) < 0.3
+      AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(y.Rank, -1)) / y.SameTypeTotalQty, 2), 0) < 0.3
+--AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(z.Rank, -1)) / z.SameTypeTotalQty, 2), 0) < 0.3
+--AND z.Rank > 0
+--      AND val.EstimatedUnitNetWorth IS NOT NULL
+--AND val.EstimatedTime<GETDATE()-0.5
+--AND y.ReturnRate < -8
+--AND ana.Score > 71
 ORDER BY 收益和 DESC,
          建议和 DESC,
          ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 1),
@@ -326,7 +330,6 @@ ORDER BY 收益和 DESC,
 ";
             SQLUtil db = new SQLUtil();
             var dt = db.ExecDataTable(sql);
-
             return View(dt);
         }
 
@@ -525,6 +528,38 @@ ORDER BY ROUND((val.EstimatedUnitNetWorth / tra.BuyUnitNetWorth - 1 - ISNULL(tra
         }
 
         [AbpMvcAuthorize]
+        public ActionResult BuyImport()
+        {
+            return View();
+        }
+
+        [AbpMvcAuthorize]
+        public async Task<JsonResult> BuyPostImport()
+        {
+            var list = CheckTableToList((row, rowIndex) =>
+             {
+                 var fundCode = CheckAndGetRow(rowIndex, 0, row);
+                 var time = CheckAndGetRow(rowIndex, 1, row).TryToDateTime();
+                 var amount = CheckAndGetRow(rowIndex, 2, row).TryToFloat();
+                 var type = (TradeRecordType)(CheckAndGetRow(rowIndex, 3, row).TryToInt());
+                 var rate = CheckAndGetRow(rowIndex, 4, row).TryToFloat();
+                 return new TradeLogBuyInput
+                 {
+                     Amount = amount,
+                     FundCode = fundCode,
+                     ServiceRate = rate,
+                     Time = time,
+                     TradeType = type
+                 };
+             });
+            foreach (var item in list)
+            {
+                await TradeLogAppService.Buy(item);
+            }
+            return Json(1);
+        }
+
+        [AbpMvcAuthorize]
         public async Task<ActionResult> BuyPost(TradeLogBuyInput input)
         {
             await TradeLogAppService.Buy(input);
@@ -536,21 +571,42 @@ ORDER BY ROUND((val.EstimatedUnitNetWorth / tra.BuyUnitNetWorth - 1 - ISNULL(tra
             return View();
         }
         [AbpMvcAuthorize]
+        public ActionResult SellImport()
+        {
+            return View();
+        }
+
+        [AbpMvcAuthorize]
+        public async Task<JsonResult> SellPostImport()
+        {
+            var list = CheckTableToList((row, rowIndex) =>
+            {
+                var fundCode = CheckAndGetRow(rowIndex, 0, row);
+                var time = CheckAndGetRow(rowIndex, 1, row).TryToDateTime();
+                var amount = CheckAndGetRow(rowIndex, 2, row).TryToFloat();
+                var type = (TradeRecordType)(CheckAndGetRow(rowIndex, 3, row).TryToInt());
+                var rate = CheckAndGetRow(rowIndex, 4, row).TryToFloat();
+                return new TradeLogSellInput
+                {
+                    Portion = 0,
+                    FundCode = fundCode,
+                    ServiceRate = rate,
+                    Time = time,
+                    Amount = amount,
+                    TradeType = type
+                };
+            });
+            foreach (var item in list)
+            {
+                await TradeLogAppService.Sell(item);
+            }
+            return Json(1);
+        }
+        [AbpMvcAuthorize]
         public async Task<ActionResult> SellPost(TradeLogSellInput input)
         {
             await TradeLogAppService.Sell(input);
             return Redirect("/Fund/Sell");
-        }
-
-        public ActionResult Transfer()
-        {
-            return View();
-        }
-        [AbpMvcAuthorize]
-        public async Task<ActionResult> TransferPost(TradeLogTransferInput input)
-        {
-            await TradeLogAppService.Transfer(input);
-            return Redirect("/Fund/Transfer");
         }
     }
 }

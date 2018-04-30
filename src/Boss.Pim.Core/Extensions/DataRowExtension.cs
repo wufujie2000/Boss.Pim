@@ -8,70 +8,82 @@ namespace Boss.Pim.Extensions
     /// </summary>
     public static class DataRowExtension
     {
-        public static string ToString(this DataRow row, int column)
+        public static string TryToString(this DataRow row, int column)
         {
             object val = row[column];
-            return ToString(val);
+            return TryToString(val);
         }
 
-        public static string ToString(this DataRow row, string column)
+        public static string TryToString(this DataRow row, string column)
         {
             object val = row[column];
-            return ToString(val);
+            return TryToString(val);
         }
 
-        public static Guid ToGuid(this DataRow row, int column, Guid result)
+        public static Guid TryToGuid(this DataRow row, int column, Guid result)
         {
             object val = row[column];
-            return ToGuid(val, result);
+            return TryToGuid(val, result);
         }
 
-        public static Guid ToGuid(this DataRow row, string column, Guid result)
+        public static Guid TryToGuid(this DataRow row, string column, Guid result)
         {
             object val = row[column];
-            return ToGuid(val, result);
+            return TryToGuid(val, result);
         }
 
-        public static Guid ToGuid(this DataRow row, string column)
+        public static Guid TryToGuid(this DataRow row, string column)
         {
-            return row.ToGuid(column, Guid.Empty);
+            return row.TryToGuid(column, Guid.Empty);
         }
 
-        public static int ToInt32(this DataRow row, int column, int result = 0)
+        public static decimal TryToDecimal(this DataRow row, int column, decimal result = 0)
         {
             object val = row[column];
-            return ToInt32(val, result);
+            return TryToDecimal(val, result);
         }
 
-        public static int ToInt32(this DataRow row, string column, int result = 0)
+        public static int TryToInt32(this DataRow row, int column, int result = 0)
         {
             object val = row[column];
-            return ToInt32(val, result);
+            return TryToInt32(val, result);
         }
 
-        public static DateTime ToDateTime(this DataRow row, int column, DateTime result)
+        public static int TryToInt32(this DataRow row, string column, int result = 0)
         {
             object val = row[column];
-            return ToDateTime(val, result);
+            return TryToInt32(val, result);
         }
 
-        public static DateTime ToDateTime(this DataRow row, string column, DateTime result)
+        public static DateTime TryToDateTime(this DataRow row, int column, DateTime result)
         {
             object val = row[column];
-            return ToDateTime(val, result);
+            return TryToDateTime(val, result);
         }
-        public static DateTime ToDateTime(this DataRow row, int column, string result)
+
+        public static DateTime? TryToDateTimeOrNull(this DataRow row, int column)
         {
-            return row.ToDateTime(column, Convert.ToDateTime(result));
+            object val = row[column];
+            return TryToDateTimeOrNull(val);
         }
-        public static DateTime ToDatetime(this DataRow row, string column, string result)
+
+        public static DateTime TryToDateTime(this DataRow row, string column, DateTime result)
         {
-            return row.ToDateTime(column, Convert.ToDateTime(result));
+            object val = row[column];
+            return TryToDateTime(val, result);
+        }
+        public static DateTime TryToDateTime(this DataRow row, int column, string result)
+        {
+            return row.TryToDateTime(column, Convert.ToDateTime(result));
+        }
+        public static DateTime TryToDatetime(this DataRow row, string column, string result)
+        {
+            return row.TryToDateTime(column, Convert.ToDateTime(result));
         }
 
         #region private
 
-        private static string ToString(object val)
+        private static string TryToString(object val)
         {
             if (val == null || val == DBNull.Value || string.IsNullOrWhiteSpace(val.ToString()) || val.ToString().ToLower() == "null")
             {
@@ -80,7 +92,7 @@ namespace Boss.Pim.Extensions
             return val.ToString();
         }
 
-        private static Guid ToGuid(object val, Guid result)
+        private static Guid TryToGuid(object val, Guid result)
         {
             if (val == null || val == DBNull.Value || string.IsNullOrWhiteSpace(val.ToString()) || val.ToString().ToLower() == "null")
             {
@@ -94,7 +106,7 @@ namespace Boss.Pim.Extensions
             return result;
         }
 
-        private static int ToInt32(object val, int result = 0)
+        private static int TryToInt32(object val, int result = 0)
         {
             if (val == null || val == DBNull.Value || string.IsNullOrWhiteSpace(val.ToString()) || val.ToString().ToLower() == "null")
             {
@@ -108,7 +120,35 @@ namespace Boss.Pim.Extensions
             return result;
         }
 
-        private static DateTime ToDateTime(object val, DateTime result)
+        private static decimal TryToDecimal(object val, decimal result = 0)
+        {
+            if (val == null || val == DBNull.Value || string.IsNullOrWhiteSpace(val.ToString()) || val.ToString().ToLower() == "null")
+            {
+                return result;
+            }
+            decimal dt;
+            if (decimal.TryParse(val.ToString(), out dt))
+            {
+                result = dt;
+            }
+            return result;
+        }
+
+        public static DateTime? TryToDateTimeOrNull(object val, DateTime? result = null)
+        {
+            if (val == null || val == DBNull.Value || string.IsNullOrWhiteSpace(val.ToString()) || val.ToString().ToLower() == "null")
+            {
+                return result;
+            }
+            DateTime dt;
+            if (DateTime.TryParse(val.ToString(), out dt))
+            {
+                result = dt;
+            }
+            return result;
+        }
+
+        private static DateTime TryToDateTime(object val, DateTime result)
         {
             if (val == null || val == DBNull.Value || string.IsNullOrWhiteSpace(val.ToString()) || val.ToString().ToLower() == "null")
             {

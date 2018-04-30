@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 using Abp.Dependency;
 using Abp.Domain.Repositories;
 using Boss.Pim.Extensions;
 
-namespace Boss.Pim.Funds.DomainServices
+namespace Boss.Pim.Funds.Services
 {
     public class NetWorthPeriodAnalyseManager : PimDomainServiceBase, ISingletonDependency
     {
+        public IRepository<NetWorth, Guid> NetWorthRepository { get; set; }
         public IRepository<NetWorthPeriodAnalyse, Guid> GuessPrejudgementRepository { get; set; }
+
         /// <summary>
         /// 按10天拆分 预判
         /// </summary>
@@ -25,7 +26,7 @@ namespace Boss.Pim.Funds.DomainServices
             {
                 return list;
             }
-            for (int i = 10; i <= 370;)
+            for (int i = 10; i <= 120;)
             {
                 bool isLast = false;
                 var info = CalcGuessPrejudgement(fundCode, yearlist, startDate, i, ref isLast);
@@ -135,7 +136,29 @@ namespace Boss.Pim.Funds.DomainServices
                 {
                     foreach (var item in list)
                     {
-                        await GuessPrejudgementRepository.InsertAsync(item);
+                        await GuessPrejudgementRepository.InsertAsync(new NetWorthPeriodAnalyse
+                        {
+                            Avg = item.Avg.RoundDigits(),
+                            BoWave = item.BoWave.RoundDigits(),
+                            DieFu = item.DieFu.RoundDigits(),
+                            FundCode = item.FundCode,
+                            GreatBuy = item.GreatBuy.RoundDigits(),
+                            GreatSale = item.GreatSale.RoundDigits(),
+                            Later = item.Later.RoundDigits(),
+                            Max = item.Max.RoundDigits(),
+                            MaxAvg = item.MaxAvg.RoundDigits(),
+                            MaxLoseCent = item.MaxLoseCent.RoundDigits(),
+                            MaxPayCent = item.MaxPayCent.RoundDigits(),
+                            Min = item.Min.RoundDigits(),
+                            MinAvg = item.MinAvg.RoundDigits(),
+                            PayWaveRate = item.PayWaveRate.RoundDigits(),
+                            PeriodDays = item.PeriodDays,
+                            PeriodStartDate = item.PeriodStartDate,
+                            SafeHigh = item.SafeHigh.RoundDigits(),
+                            SafeLow = item.SafeLow.RoundDigits(),
+                            SafeTradeCent = item.SafeTradeCent.RoundDigits(),
+                            ZhangFu = item.ZhangFu.RoundDigits()
+                        });
                     }
                     await uow.CompleteAsync();
                 }
@@ -146,9 +169,6 @@ namespace Boss.Pim.Funds.DomainServices
         /// <summary>
         /// 最低买入值
         /// </summary>
-        /// <param name="a">平均值</param>
-        /// <param name="b">月末值</param>
-        /// <param name="c">最小值</param>
         /// <returns></returns>
         public float GetGreatBuy(float avg, float later, float min)
         {
@@ -165,9 +185,6 @@ namespace Boss.Pim.Funds.DomainServices
         /// <summary>
         /// 最高卖出值
         /// </summary>
-        /// <param name="a">平均值</param>
-        /// <param name="b">月末值</param>
-        /// <param name="c">最大值</param>
         /// <returns></returns>
         public float GetGreatSale(float avg, float later, float max)
         {
@@ -178,6 +195,36 @@ namespace Boss.Pim.Funds.DomainServices
             else
             {
                 return (float)Math.Round(max * (float)1.02, 4);
+            }
+        }
+
+        public async Task Insert(ICollection<string> funds)
+        {
+            var statrDate = DateTime.Now.Date;
+            var minStartDate = statrDate.AddDays(-120);
+            //using (var uow = UnitOfWorkManager.Begin())
+            {
+                foreach (var fund in funds)
+                {
+                    if (string.IsNullOrWhiteSpace(fund))
+                    {
+                        continue;
+                    }
+                    try
+                    {
+                        var newWorthModellist = await NetWorthRepository.GetAllListAsync(a => fund == a.FundCode && a.Date >= minStartDate);
+
+                        var itemmodellist = CalcGuessPrejudgementSplit10Days(fund, newWorthModellist, statrDate);
+                        if (itemmodellist != null)
+                        {
+                            await CheckAndInsert(itemmodellist, fund, statrDate);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(fund + " " + e.Message, e);
+                    }
+                }
             }
         }
     }

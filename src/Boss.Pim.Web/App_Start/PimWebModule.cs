@@ -27,6 +27,7 @@ namespace Boss.Pim.Web
         typeof(AbpWebSignalRModule),
         typeof(AbpRedisCacheModule),
         typeof(AbpHangfireModule),
+        //typeof(AbpExtendHangfireModule),
         typeof(AbpWebMvcModule))]
     public class PimWebModule : AbpModule
     {

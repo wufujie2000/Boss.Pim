@@ -15,7 +15,5 @@ namespace Boss.Pim.Funds
         Task Sell(TradeLogSellInput input);
 
         Task UpdateAllSellUniteNetWorth();
-
-        Task Transfer(TradeLogTransferInput input);
     }
 }

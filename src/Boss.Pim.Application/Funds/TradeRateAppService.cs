@@ -8,8 +8,9 @@ using Abp.Application.Services;
 using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
 using Boss.Pim.Extensions;
-using Boss.Pim.Funds.DomainServices;
 using Boss.Pim.Funds.Dto;
+using Boss.Pim.Funds.Services;
+using Boss.Pim.Funds.Values;
 using Boss.Pim.Sdk.Eastmoney;
 using Boss.Pim.Sdk.Eastmoney.Responses;
 using Boss.Pim.Utils;
@@ -21,7 +22,7 @@ namespace Boss.Pim.Funds
     {
         public WebSrcUtil WebSrcUtil { get; set; }
         public IRepository<TradeRecord, Guid> TradeRecordRepository { get; set; }
-        public FundDomainService FundDomainService { get; set; }
+        public FundManager FundDomainService { get; set; }
 
         public TradeRateAppService(IRepository<TradeRate, int> repository) : base(repository)
         {
@@ -174,7 +175,7 @@ namespace Boss.Pim.Funds
                         Rate = rate,
                         SourceRate = sgitem?.source.Replace("%", "").TryToFloat(-1) ?? -1,
                         Title = sgitem.money,
-                        RateType = ObjectValues.TradeRateType.申购费率
+                        RateType = TradeRateType.申购费率
                     });
                 }
             }
@@ -230,7 +231,7 @@ namespace Boss.Pim.Funds
                         Rate = rate,
                         SourceRate = shitem?.source.Replace("%", "").TryToFloat(-1) ?? -1,
                         Title = shitem.time,
-                        RateType = ObjectValues.TradeRateType.赎回费率
+                        RateType = TradeRateType.赎回费率
                     });
                 }
             }

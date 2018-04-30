@@ -10,8 +10,8 @@ using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
 using Boss.Pim.AdoNet;
 using Boss.Pim.Extensions;
-using Boss.Pim.Funds.DomainServices;
 using Boss.Pim.Funds.Dto;
+using Boss.Pim.Funds.Services;
 using Boss.Pim.Sdk.Dkhs;
 using Boss.Pim.Sdk.Dkhs.Responses;
 using Boss.Pim.Utils;
@@ -24,7 +24,7 @@ namespace Boss.Pim.Funds
     {
         public WebSrcUtil WebSrcUtil { get; set; }
         public IRepository<NotTradeFund, Guid> NotTradeFundRepository { get; set; }
-        public FundDomainService FundDomainService { get; set; }
+        public FundManager FundDomainService { get; set; }
 
 
         public FundAppService(IRepository<Fund> repository) : base(repository)

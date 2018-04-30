@@ -8,8 +8,8 @@ using Abp.Application.Services;
 using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Boss.Pim.Extensions;
-using Boss.Pim.Funds.DomainServices;
 using Boss.Pim.Funds.Dto;
+using Boss.Pim.Funds.Services;
 using Boss.Pim.Sdk.Dkhs.Responses;
 using Boss.Pim.Utils;
 using Newtonsoft.Json;
@@ -19,7 +19,7 @@ namespace Boss.Pim.Funds
     public class FundAllocationAppService : AsyncCrudAppService<FundAllocation, FundAllocationDto>, IFundAllocationAppService
     {
         public WebSrcUtil WebSrcUtil { get; set; }
-        public FundDomainService FundDomainService { get; set; }
+        public FundManager FundDomainService { get; set; }
         public IRepository<Fund> FundRepository { get; set; }
         public IRepository<FundAllocateHoldSymbol, Guid> FundAllocateHoldSymbolRepository { get; set; }
         public IRepository<FundAllocateIndustry, Guid> FundAllocateIndustryRepository { get; set; }

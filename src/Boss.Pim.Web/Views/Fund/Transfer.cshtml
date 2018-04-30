@@ -4,9 +4,15 @@
 }
 <form class="form-horizontal" action="/Fund/TransferPost" method="post">
     <div class="form-group">
-        <label for="FundCode" class="col-sm-2 control-label">基金编码</label>
+        <label for="FromFundCode" class="col-sm-2 control-label">卖出基金编码</label>
         <div class="col-sm-10">
-            <input type="text" class="form-control" id="FundCode" name="FundCode" value='@Request["fundCode"]'>
+            <input type="text" class="form-control" id="FromFundCode" name="FromFundCode" value='@Request["fundCode"]'>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="ToFundCode" class="col-sm-2 control-label">买入基金编码</label>
+        <div class="col-sm-10">
+            <input type="text" class="form-control" id="ToFundCode" name="ToFundCode">
         </div>
     </div>
     <div class="form-group">

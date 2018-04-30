@@ -2,7 +2,7 @@
 using Abp.Application.Services.Dto;
 using Abp.AutoMapper;
 using Abp.Domain.Entities.Auditing;
-using Boss.Pim.Funds.ObjectValues;
+using Boss.Pim.Funds.Values;
 
 namespace Boss.Pim.Funds.Dto
 {

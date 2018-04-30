@@ -5,7 +5,7 @@
     ViewBag.Title = "购买基金建议";
 }
 <div class="table-responsive">
-    <table class="table table-bordered table-hover table-striped">
+    <table class="table table-bordered table-hover table-striped table-expandable">
         <thead>
             <tr>
                 @foreach (DataColumn col in Model.Columns)
@@ -24,14 +24,14 @@
                     {
                         if (col.ColumnName == "基金编码")
                         {
-                    <td>
-                        <a href='https://m.1234567.com.cn/index.html?page=jjxq&code=@fundCode' target="_blank">天天基金</a>
-                        @*<a href='https://m.howbuy.com/fund/@(fundCode)/' target="_blank">掌上基金</a>*@
-                        <a href='https://www.dkhs.com/s/@dkhsCode' target="_blank">基金决策宝</a>
-                        <a href="https://www.dkhs.com/symbols/funds/diagnosis/detail/@dkhsCode/" target="_blank">诊断</a>
-                        <a href="/Fund/Buy?fundCode=@fundCode" target="_blank">购买</a>
-                        @Html.Raw(row[col.ColumnName])
-                    </td>
+                            <td>
+                                <a href='https://m.1234567.com.cn/index.html?page=jjxq&code=@fundCode' target="_blank">天天基金</a>
+                                @*<a href='https://m.howbuy.com/fund/@(fundCode)/' target="_blank">掌上基金</a>*@
+                                <a href='https://www.dkhs.com/s/@dkhsCode' target="_blank">基金决策宝</a>
+                                <a href="https://www.dkhs.com/symbols/funds/diagnosis/detail/@dkhsCode/" target="_blank">诊断</a>
+                                <a href="/Fund/Buy?fundCode=@fundCode" target="_blank">购买</a>
+                                @Html.Raw(row[col.ColumnName])
+                            </td>
                         }
                         else if (col.ColumnName == "近1月涨幅")
                         {
@@ -58,6 +58,15 @@
                         }
 
                     }
+                </tr>
+                <tr>
+                    <td colspan="@Model.Columns.Count">
+                        <table>
+                            <tr>
+                                <td>test</td>
+                            </tr>
+                        </table>
+                    </td>
                 </tr>
             }
         </tbody>

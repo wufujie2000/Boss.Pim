@@ -8,8 +8,8 @@ using System.Transactions;
 using Abp.Application.Services;
 using Abp.Domain.Repositories;
 using Boss.Pim.Extensions;
-using Boss.Pim.Funds.DomainServices;
 using Boss.Pim.Funds.Dto;
+using Boss.Pim.Funds.Services;
 using Boss.Pim.Sdk.Eastmoney;
 using Boss.Pim.Sdk.Eastmoney.Responses;
 using Boss.Pim.Utils;
@@ -19,7 +19,7 @@ namespace Boss.Pim.Funds
 {
     public class ValuationAppService : AsyncCrudAppService<Valuation, ValuationDto>, IValuationAppService
     {
-        public FundDomainService FundDomainService { get; set; }
+        public FundManager FundDomainService { get; set; }
         public WebSrcUtil WebSrcUtil { get; set; }
 
         public ValuationAppService(IRepository<Valuation> repository) : base(repository)

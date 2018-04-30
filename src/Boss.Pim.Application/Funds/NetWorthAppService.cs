@@ -7,15 +7,15 @@ using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
 using Boss.Pim.AdoNet;
 using Boss.Pim.Extensions;
-using Boss.Pim.Funds.DomainServices;
 using Boss.Pim.Funds.Dto;
+using Boss.Pim.Funds.Services;
 using Dapper;
 
 namespace Boss.Pim.Funds
 {
     public class NetWorthAppService : AsyncCrudAppService<NetWorth, NetWorthDto, Guid>, INetWorthAppService
     {
-        public FundDomainService FundDomainService { get; set; }
+        public FundManager FundDomainService { get; set; }
         public NetWorthManager NetWorthManager { get; set; }
         public NetWorthPeriodAnalyseManager NetWorthPeriodAnalyseManager { get; set; }
 
@@ -27,13 +27,14 @@ namespace Boss.Pim.Funds
         public async Task Download3Days()
         {
             Logger.Info("开始下载更新 NetWorth ");
-            IQueryable<Fund> fundsQuery = await FundDomainService.GetFundsQuery();
-            var list = await AsyncQueryableExecuter.ToListAsync(fundsQuery.Select(a => new { a.Code, a.DkhsCode }));
+            var list = await AsyncQueryableExecuter.ToListAsync(
+                 FundDomainService.GetQuery().Select(a => new { a.Code, a.DkhsCode })
+                 );
             foreach (var fund in list)
             {
                 try
                 {
-                    var modellist = await NetWorthManager.DownloadNetWorthByDkhs(fund.Code, fund.DkhsCode, 3);
+                    var modellist = await NetWorthManager.DownloadNetWorthByDkhs(fund.Code, fund.DkhsCode, 5);
                     if (modellist.Count > 0)
                     {
                         await FundDomainService.CheckInsertNetWorth(modellist, fund.Code);
@@ -72,10 +73,18 @@ SELECT DISTINCT
 FROM dbo.FundCenter_Funds fun
     INNER JOIN dbo.FundCenter_NetWorths net
         ON fun.Code = net.FundCode
-WHERE Date > '2018-03-30'
+WHERE Date >= '2018-03-30'
 GROUP BY fun.Code,
          fun.DkhsCode
-HAVING COUNT(1) < 8;
+HAVING COUNT(1) <
+(
+    SELECT TOP 1
+        COUNT(1)
+    FROM dbo.FundCenter_NetWorths
+    WHERE Date >= '2018-03-30'
+    GROUP BY FundCode
+    ORDER BY COUNT(1) DESC
+);
 ";
             using (var conn = new SqlConnection(SQLUtil.DefaultConnStr))
             {

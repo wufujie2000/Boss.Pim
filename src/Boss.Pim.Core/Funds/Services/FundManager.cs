@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 using System.Transactions;
 using Abp.Dependency;
 using Abp.Domain.Repositories;
-using Abp.Linq.Extensions;
 
-namespace Boss.Pim.Funds.DomainServices
+namespace Boss.Pim.Funds.Services
 {
-    public class FundDomainService : PimDomainServiceBase, ISingletonDependency
+    public class FundManager : PimDomainServiceBase, ISingletonDependency
     {
+        public IRepository<NotTradeFund, Guid> NotTradeFundRepository { get; set; }
         public IRepository<FundRank, Guid> FundRankRepository { get; set; }
         public IRepository<TradeRecord, Guid> TradeRecordRepository { get; set; }
         public IRepository<Analyse> AnalyseRepository { get; set; }
@@ -52,8 +52,12 @@ namespace Boss.Pim.Funds.DomainServices
 
         public IQueryable<Fund> GetQuery()
         {
-            return FundRepository.GetAll()
-                .Where(a => !a.TypeName.Contains("货币型") && !a.TypeName.Contains("混合-FOF") && !a.TypeName.Contains("其他创新") && !a.TypeName.Contains("债券创新-场内") && !a.TypeName.Contains("理财型") && !a.TypeName.Contains("其他"));
+            var notquery = NotTradeFundRepository.GetAll().Select(a => a.FundCode).Distinct();
+            var query = FundRepository.GetAll()
+                .Where(a => !a.TypeName.Contains("货币型") && !a.TypeName.Contains("混合-FOF") && !a.TypeName.Contains("其他创新") && !a.TypeName.Contains("债券创新-场内") && !a.TypeName.Contains("理财型") && !a.TypeName.Contains("其他"))
+                .Where(a => !notquery.Contains(a.Code))
+                ;
+            return query;
         }
 
         public async Task CheckInsertNetWorth(List<NetWorth> list, string fundCode)

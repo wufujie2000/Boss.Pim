@@ -219,7 +219,6 @@
     <Compile Include="Funds\Dto\AnalyseDto.cs" />
     <Compile Include="Funds\Dto\FundDto.cs" />
     <Compile Include="Funds\Dto\FundCompanyDto.cs" />
-    <Compile Include="Funds\Dto\FundManagerDto.cs" />
     <Compile Include="Funds\Dto\NetWorthDto.cs" />
     <Compile Include="Funds\Dto\PeriodIncreaseDto.cs" />
     <Compile Include="Funds\Dto\RatingPoolDto.cs" />

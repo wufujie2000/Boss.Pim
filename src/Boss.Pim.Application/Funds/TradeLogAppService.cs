@@ -7,7 +7,7 @@ using Abp.Authorization;
 using Abp.AutoMapper;
 using Abp.Domain.Repositories;
 using Boss.Pim.Funds.Dto;
-using Boss.Pim.Funds.ObjectValues;
+using Boss.Pim.Funds.Values;
 
 namespace Boss.Pim.Funds
 {
@@ -25,7 +25,7 @@ namespace Boss.Pim.Funds
         #region Buy
         public async Task Buy(TradeLogBuyInput input)
         {
-            await Buy(input.FundCode, input.Time, input.Amount, input.ServiceRate, TradeRecordType.买入);
+            await Buy(input.FundCode, input.Time, input.Amount, input.ServiceRate, input.TradeType);
         }
 
         private async Task Buy(string fundCode, DateTime time, float amount, float serviceRate, TradeRecordType recordType)
@@ -40,7 +40,7 @@ namespace Boss.Pim.Funds
                 TradeType = recordType
             };
             info.ServiceCharge = info.Amount * serviceRate / 100;
-            
+
             //内扣法是针对认购金额，即投资总额的。
             //认购费用＝ 认购金额×认购费率
             //净认购金额＝认购金额－认购费用
@@ -78,10 +78,10 @@ namespace Boss.Pim.Funds
         #region Sell
         public async Task Sell(TradeLogSellInput input)
         {
-            await Sell(input.FundCode, input.Time, input.Portion, input.ServiceRate, TradeRecordType.卖出);
+            await Sell(input.FundCode, input.Time, input.Portion, input.ServiceRate, input.TradeType, input.Amount);
         }
 
-        private async Task<TradeLog> Sell(string fundCode, DateTime time, float portion, float serviceRate, TradeRecordType recordType)
+        private async Task<TradeLog> Sell(string fundCode, DateTime time, float portion, float serviceRate, TradeRecordType recordType, float amount)
         {
             var info = new TradeLog
             {
@@ -89,6 +89,7 @@ namespace Boss.Pim.Funds
                 FundCode = fundCode,
                 Time = time,
                 Portion = portion,
+                Amount = amount,
                 ServiceRate = serviceRate,
                 TradeType = recordType
             };
@@ -112,19 +113,18 @@ namespace Boss.Pim.Funds
             info.UnitNetWorth = await GetUnitNetWorth(info);
             if (info.UnitNetWorth > 0)
             {
-                info.Amount = info.Portion * info.UnitNetWorth;
+                if (info.Amount > 0)
+                {
+                    info.Portion = info.Amount / info.UnitNetWorth;
+                }
+                else
+                {
+                    info.Amount = info.Portion * info.UnitNetWorth;
+                }
                 info.ServiceCharge = info.Amount * info.ServiceRate / 100;
             }
         }
-        #endregion
-
-
-        public async Task Transfer(TradeLogTransferInput input)
-        {
-            var fromInfo = await Sell(input.FundCode, input.Time, input.Portion, input.FromServiceRate, TradeRecordType.卖出);
-
-            await Buy(input.FundCode, input.Time, fromInfo.Amount, input.ToServiceRate, TradeRecordType.转入);
-        }
+        #endregion        
 
         private async Task<float> GetUnitNetWorth(TradeLog info)
         {

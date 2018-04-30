@@ -21,11 +21,15 @@ FROM
            (gue10.GreatSale + gue20.GreatSale) / 2
                WHEN gue40.GreatSale IS NULL THEN
            (gue10.GreatSale + gue20.GreatSale + gue30.GreatSale) / 3
-               --WHEN gue50.GreatSale IS NULL THEN
-               ELSE
+               WHEN gue50.GreatSale IS NULL THEN
+           --ELSE
            (gue10.GreatSale + gue20.GreatSale + gue30.GreatSale + gue40.GreatSale) / 4
-               --    ELSE
-           --(gue10.GreatSale + gue20.GreatSale + gue30.GreatSale + gue40.GreatSale + gue50.GreatSale) / 5
+               WHEN gue60.GreatSale IS NULL THEN
+           --ELSE
+           (gue10.GreatSale + gue20.GreatSale + gue30.GreatSale + gue40.GreatSale + gue50.GreatSale) / 5
+               ELSE
+           (gue10.GreatSale + gue20.GreatSale + gue30.GreatSale + gue40.GreatSale + gue50.GreatSale + gue60.GreatSale)
+           / 6
            END GreatSale,
            CASE
                WHEN gue20.GreatBuy IS NULL THEN
@@ -34,11 +38,14 @@ FROM
            (gue10.GreatBuy + gue20.GreatBuy) / 2
                WHEN gue40.GreatBuy IS NULL THEN
            (gue10.GreatBuy + gue20.GreatBuy + gue30.GreatBuy) / 3
-               --WHEN gue50.GreatBuy IS NULL THEN
-               ELSE
+               WHEN gue50.GreatBuy IS NULL THEN
+           --ELSE
            (gue10.GreatBuy + gue20.GreatBuy + gue30.GreatBuy + gue40.GreatBuy) / 4
-               --    ELSE
-           --(gue10.GreatBuy + gue20.GreatBuy + gue30.GreatBuy + gue40.GreatBuy + gue50.GreatBuy) / 5
+               WHEN gue60.GreatBuy IS NULL THEN
+           --ELSE
+           (gue10.GreatBuy + gue20.GreatBuy + gue30.GreatBuy + gue40.GreatBuy + gue50.GreatBuy) / 5
+               ELSE
+           (gue10.GreatBuy + gue20.GreatBuy + gue30.GreatBuy + gue40.GreatBuy + gue50.GreatBuy + gue60.GreatBuy) / 6
            END GreatBuy
     FROM dbo.FundCenter_Funds fun
         LEFT JOIN dbo.FundCenter_NetWorthPeriodAnalyses gue10
@@ -94,20 +101,20 @@ FROM
 
 
 
-SELECT TOP 500
+SELECT TOP 200
     CONVERT(VARCHAR(32), val.EstimatedTime, 20) ¹ÀÖµÊ±¼ä,
     fun.Code »ù½ð±àÂë,
     val.ReturnRate ¹ÀÖµÕÇ·ù,
     ROUND((1 / val.EstimatedUnitNetWorth - 1 / #dtGreat.GreatSale) * 100, 3) ÊÕÒæºÍ,
     ROUND((1 / val.EstimatedUnitNetWorth - 1 / #dtGreat.GreatBuy), 3) ½¨ÒéºÍ,
-    ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 1) ½ü3ÔÂÅÅ±È,
-    ROUND(CONVERT(FLOAT, ISNULL(y6.Rank, -1)) / y6.SameTypeTotalQty, 1) ½ü6ÔÂÅÅ±È,
-    ROUND(CONVERT(FLOAT, ISNULL(y.Rank, -1)) / y.SameTypeTotalQty, 1) ½ü1ÔÂÅÅ±È,
     y3.Rank ½ü3ÔÂÅÅÃû,
     y6.Rank ½ü6ÔÂÅÅÃû,
     y.Rank ½ü1ÔÂÅÅÃû,
     z.Rank ½ü1ÖÜÅÅÃû,
     n1.Rank ½ü1ÄêÅÅÃû,
+    ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 1) ½ü3ÔÂÅÅ±È,
+    ROUND(CONVERT(FLOAT, ISNULL(y6.Rank, -1)) / y6.SameTypeTotalQty, 1) ½ü6ÔÂÅÅ±È,
+    ROUND(CONVERT(FLOAT, ISNULL(y.Rank, -1)) / y.SameTypeTotalQty, 1) ½ü1ÔÂÅÅ±È,
     rate.Title ·ÑÂÊ,
     rate.Rate ·ÑÂÊ,
     fun.TypeName »ù½ð·ÖÀà,
@@ -258,7 +265,7 @@ FROM dbo.FundCenter_Funds fun
                                    '200Íò ¡Ü ¹ºÂò½ð¶î < 500Íò', '50Íò ¡Ü ¹ºÂò½ð¶î < 200Íò', '100Íò ¡Ü ¹ºÂò½ð¶î < 300Íò',
                                    '300Íò ¡Ü ¹ºÂò½ð¶î < 500Íò', '50Íò ¡Ü ¹ºÂò½ð¶î < 100Íò', '50Íò ¡Ü ¹ºÂò½ð¶î < 250Íò',
                                    '250Íò ¡Ü ¹ºÂò½ð¶î < 500Íò', '50Íò ¡Ü ¹ºÂò½ð¶î < 500Íò', '100Íò ¡Ü ¹ºÂò½ð¶î < 1000Íò', '¹ºÂò½ð¶î ¡Ý 500Íò',
-                                   '100Íò ¡Ü ¹ºÂò½ð¶î < 250Íò'
+                                   '100Íò ¡Ü ¹ºÂò½ð¶î < 250Íò', '10ÍòÃÀÔª ¡Ü ¹ºÂò½ð¶î < 30ÍòÃÀÔª', '30ÍòÃÀÔª ¡Ü ¹ºÂò½ð¶î < 60ÍòÃÀÔª'
                                  )
 WHERE fun.TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒÐÍ', 'Àí²ÆÐÍ', 'ÆäËû´´ÐÂ', 'Õ®È¯´´ÐÂ-³¡ÄÚ', 'ÆäËû' )
       --AND fun.IsOptional = 1
@@ -283,15 +290,15 @@ WHERE fun.TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒÐÍ', 'Àí²ÆÐÍ', 'ÆäËû´´ÐÂ', 'Õ®È¯´´Ð
       --                     AND ISNULL(per.ReturnRate, 999) >= 40
       --              )
       --    )
-      --AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(y6.Rank, -1)) / y6.SameTypeTotalQty, 2), 0) < 0.2
-      --AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 2), 0) < 0.3
-      --AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(y.Rank, -1)) / y.SameTypeTotalQty, 2), 0) < 0.2
-      --AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(z.Rank, -1)) / z.SameTypeTotalQty, 2), 0) < 0.3
-      --AND z.Rank > 0
-      --      AND val.EstimatedUnitNetWorth IS NOT NULL
-      --AND val.EstimatedTime<GETDATE()-0.5
-      --AND y.ReturnRate < -8
-      --AND ana.Score > 71
+      AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(y6.Rank, -1)) / y6.SameTypeTotalQty, 2), 0) < 0.5
+      AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 2), 0) < 0.4
+      AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(y.Rank, -1)) / y.SameTypeTotalQty, 2), 0) < 0.4
+--AND ISNULL(ROUND(CONVERT(FLOAT, ISNULL(z.Rank, -1)) / z.SameTypeTotalQty, 2), 0) < 0.3
+--AND z.Rank > 0
+--      AND val.EstimatedUnitNetWorth IS NOT NULL
+--AND val.EstimatedTime<GETDATE()-0.5
+--AND y.ReturnRate < -8
+--AND ana.Score > 71
 ORDER BY ÊÕÒæºÍ DESC,
          ½¨ÒéºÍ DESC,
          ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 1),
@@ -326,7 +333,7 @@ ORDER BY ÊÕÒæºÍ DESC,
 --      --    )
 --      AND Code IN
 --          (
---              SELECT TOP 200
+--              SELECT TOP 300
 --                  fun.Code »ù½ð±àÂë
 --              FROM dbo.FundCenter_Funds fun
 --                  LEFT JOIN dbo.FundCenter_Valuations val
@@ -335,6 +342,10 @@ ORDER BY ÊÕÒæºÍ DESC,
 --                      ON #dtGreat.Code = fun.Code
 --              WHERE fun.TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒÐÍ', 'Àí²ÆÐÍ', 'ÆäËû´´ÐÂ', 'Õ®È¯´´ÐÂ-³¡ÄÚ', 'ÆäËû' )
 --                    AND fun.IsOptional = 0
+--                    AND NOT EXISTS
+--              (
+--                  SELECT 1 FROM FundCenter_NotTradeFunds ntf WHERE ntf.FundCode = fun.Code
+--              )
 --              ORDER BY ROUND((1 / val.EstimatedUnitNetWorth - 1 / #dtGreat.GreatSale) * 100, 3) DESC,
 --                       ROUND((1 / #dtGreat.GreatBuy - 1 / val.EstimatedUnitNetWorth), 3) DESC,
 --                       val.ReturnRate DESC

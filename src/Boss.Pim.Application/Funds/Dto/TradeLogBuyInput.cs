@@ -1,4 +1,5 @@
 ﻿using Abp.AutoMapper;
+using Boss.Pim.Funds.Values;
 
 namespace Boss.Pim.Funds.Dto
 {
@@ -14,5 +15,10 @@ namespace Boss.Pim.Funds.Dto
         /// 交易费率
         /// </summary>
         public float ServiceRate { get; set; }
+
+        /// <summary>
+        /// 交易类型
+        /// </summary>
+        public TradeRecordType TradeType { get; set; }
     }
 }

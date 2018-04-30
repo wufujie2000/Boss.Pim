@@ -2,7 +2,6 @@
 using System.ComponentModel.DataAnnotations;
 using Abp.Application.Services.Dto;
 using Abp.AutoMapper;
-using Boss.Pim.Funds.ObjectValues;
 
 namespace Boss.Pim.Funds.Dto
 {

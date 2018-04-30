@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
-using Boss.Pim.Funds.ObjectValues;
+using Boss.Pim.Funds.Values;
 
 namespace Boss.Pim.Funds.Dto
 {

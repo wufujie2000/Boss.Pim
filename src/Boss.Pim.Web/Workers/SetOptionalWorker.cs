@@ -1,45 +1,34 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Abp.Dependency;
 using Abp.Domain.Uow;
+using Abp.Hangfire;
 using Abp.Threading;
 using Abp.Threading.BackgroundWorkers;
 using Abp.Threading.Timers;
 using Boss.Pim.AdoNet;
+using Hangfire;
 
 namespace Boss.Pim.Funds.Workers
 {
-    public class SetOptionalWorker : PeriodicBackgroundWorkerBase, ISingletonDependency
+    public class SetOptionalWorker : PeriodicBackgroundWorkerHangfireBase, ISingletonDependency
     {
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="timer"></param>
-        public SetOptionalWorker(AbpTimer timer)
-        : base(timer)
+        public SetOptionalWorker() : base(Cron.Daily(9, 30))
         {
-            Timer.Period = 60 * 1000;
+
         }
-
-        private object doworklock = new object();
-
         /// <summary>
         /// 循环执行
         /// </summary>
-        protected override void DoWork()
+        public override void DoWork()
         {
-            lock (doworklock)
-            {
-                var now = DateTime.Now;
-                if (now.DayOfWeek == DayOfWeek.Sunday || now.DayOfWeek == DayOfWeek.Saturday)
-                {
-                    return;
-                }
-                if ((now.Hour == 9 && now.Minute == 20))
-                {
-                    try
-                    {
-                        var sql = @"
+            SetOptional();
+        }
+
+        private void SetOptional()
+        {
+            var sql = @"
 UPDATE dbo.FundCenter_Funds
 SET IsOptional = 0
 WHERE IsOptional = 1;
@@ -152,16 +141,8 @@ WHERE IsOptional = 0
           )
 ";
 
-                        SQLUtil db = new SQLUtil();
-                        db.ExecNonQuery(sql);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error(ex.Message, ex);
-                    }
-                    Thread.Sleep(60 * 1000);
-                }
-            }
+            SQLUtil db = new SQLUtil();
+            db.ExecNonQuery(sql);
         }
     }
 }

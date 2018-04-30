@@ -21,6 +21,7 @@ namespace Boss.Pim.EntityFramework
         public PimDbContext()
             : base("Default")
         {
+            Database.Log = log => System.Diagnostics.Debug.WriteLine(log);
         }
 
         /* NOTE:
@@ -31,17 +32,20 @@ namespace Boss.Pim.EntityFramework
         public PimDbContext(string nameOrConnectionString)
             : base(nameOrConnectionString)
         {
+            Database.Log = log => System.Diagnostics.Debug.WriteLine(log);
         }
 
         //This constructor is used in tests
         public PimDbContext(DbConnection existingConnection)
          : base(existingConnection, false)
         {
+            Database.Log = log => System.Diagnostics.Debug.WriteLine(log);
         }
 
         public PimDbContext(DbConnection existingConnection, bool contextOwnsConnection)
          : base(existingConnection, contextOwnsConnection)
         {
+            Database.Log = log => System.Diagnostics.Debug.WriteLine(log);
         }
 
         #region FundCenter
@@ -51,7 +55,6 @@ namespace Boss.Pim.EntityFramework
         public virtual IDbSet<FundAllocateHoldSymbol> FundAllocateHoldSymbols { get; set; }
         public virtual IDbSet<FundAllocateIndustry> FundAllocateIndustries { get; set; }
         public virtual IDbSet<FundAllocation> FundAllocations { get; set; }
-        public virtual IDbSet<FundManager> FundManagers { get; set; }
         public virtual IDbSet<FundRank> FundRanks { get; set; }
         public virtual IDbSet<NetWorth> NetWorths { get; set; }
         public virtual IDbSet<NetWorthPeriodAnalyse> NetWorthPeriodAnalyses { get; set; }
@@ -92,7 +95,6 @@ namespace Boss.Pim.EntityFramework
                 , typeof(FundAllocateHoldSymbol)
                 , typeof(FundAllocateIndustry)
                 , typeof(FundAllocation)
-                , typeof(FundManager)
                 , typeof(FundRank)
                 , typeof(NetWorth)
                 , typeof(NetWorthPeriodAnalyse)

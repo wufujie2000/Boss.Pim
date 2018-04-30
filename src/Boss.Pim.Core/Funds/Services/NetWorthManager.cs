@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using System.Transactions;
 using Abp.Dependency;
-using Abp.Domain.Repositories;
 using Boss.Pim.Extensions;
 using Boss.Pim.Sdk.Dkhs;
 using Boss.Pim.Sdk.Dkhs.Responses;
-using Boss.Pim.Sdk.Eastmoney;
-using Boss.Pim.Sdk.Eastmoney.Responses;
 using Boss.Pim.Utils;
 using Newtonsoft.Json;
 
-namespace Boss.Pim.Funds.DomainServices
+namespace Boss.Pim.Funds.Services
 {
     public class NetWorthManager : PimDomainServiceBase, ISingletonDependency
     {

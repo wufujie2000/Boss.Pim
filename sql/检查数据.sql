@@ -4,32 +4,69 @@ SELECT DISTINCT
 FROM dbo.FundCenter_Funds fun
     INNER JOIN dbo.FundCenter_NetWorths net
         ON fun.Code = net.FundCode
-WHERE Date > '2018-03-30'
+WHERE Date >= '2018-03-30'
 GROUP BY fun.Code,
          fun.DkhsCode
-HAVING COUNT(1) < 8;
+HAVING COUNT(1) <
+(
+    SELECT TOP 1
+        COUNT(1)
+    FROM dbo.FundCenter_NetWorths
+    WHERE Date >= '2018-03-30'
+    GROUP BY FundCode
+    ORDER BY COUNT(1) DESC
+);
 
 
 
-SELECT *
-FROM dbo.FundCenter_NetWorths
-WHERE Date > ''
-      AND Date NOT IN ( '2018-02-13', '2018-02-14', '2017-04-13', '2017-10-30', '2017-07-17', '2017-09-29',
-                        '2017-12-31'
-                      )
-      AND FundCode IN ( '000001', '000003', '000004', '000043' )
-      AND Date IN
-          (
-              SELECT Date
-              FROM dbo.FundCenter_NetWorths
-              WHERE Date > GETDATE() - 100
-                    AND FundCode IN ( '000001', '000003', '000004', '000043' )
-              GROUP BY Date
-              HAVING COUNT(1) <> 4
-          );
+SELECT fun.TypeName,
+       fun.Code,
+       fun.ShortName
+FROM dbo.FundCenter_Funds fun
+WHERE fun.TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创新', '债券创新-场内', '其他' )
+      AND NOT EXISTS
+(
+    SELECT 1
+    FROM dbo.FundCenter_NetWorthPeriodAnalyses net
+    WHERE fun.Code = net.FundCode
+          AND DATEDIFF(DAY, net.PeriodStartDate, GETDATE()) = 0
+          AND net.PeriodDays = 10
+)
+      AND NOT EXISTS
+(
+    SELECT 1
+    FROM dbo.FundCenter_NotTradeFunds net
+    WHERE fun.Code = net.FundCode
+);
 
 
 
+
+SELECT fun.TypeName,
+       fun.Code,
+       fun.ShortName
+FROM dbo.FundCenter_Funds fun
+WHERE fun.TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创新', '债券创新-场内', '其他' )
+      AND NOT EXISTS
+(
+    SELECT 1
+    FROM dbo.FundCenter_PeriodIncreases per
+    WHERE fun.Code = per.FundCode
+          AND (
+                  DATEDIFF(DAY, per.LastModificationTime, GETDATE()) = 0
+                  OR DATEDIFF(DAY, per.CreationTime, GETDATE()) = 0
+              )
+          AND per.Title = 'Z'
+)
+      AND NOT EXISTS
+(
+    SELECT 1
+    FROM dbo.FundCenter_NotTradeFunds net
+    WHERE fun.Code = net.FundCode
+);
+
+
+SELECT TOP 100 * FROM dbo.FundCenter_NetWorthPeriodAnalyses ORDER BY CreationTime DESC
 
 
 --删除重复净值分析

@@ -25,7 +25,7 @@ namespace Boss.Pim.Extensions
         /// </summary>
         /// <param name="val"></param>
         /// <returns></returns>
-        public static float RoundDigits(this float val, int digits = 4)
+        public static float RoundDigits(this float val, int digits = 6)
         {
             return Convert.ToSingle(Math.Round(val, digits, MidpointRounding.AwayFromZero));
         }
