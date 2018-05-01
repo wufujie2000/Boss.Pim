@@ -73,19 +73,18 @@ namespace Boss.Pim.Funds.Services
                 var date = item.tradedate.TryToDateTimeOrNull();
                 var unitNetWorth = item.net_value;
                 var accumulatedNetWorth = item.net_cumulative;
-                if (date == null || unitNetWorth == -1 || accumulatedNetWorth == -1)
+                if (date != null && unitNetWorth > 0)
                 {
-                    continue;
-                }
-                modellist.Add(new NetWorth
-                {
-                    FundCode = fundCode,
+                    modellist.Add(new NetWorth
+                    {
+                        FundCode = fundCode,
 
-                    Date = date.Value,
-                    UnitNetWorth = unitNetWorth,
-                    AccumulatedNetWorth = accumulatedNetWorth,
-                    DailyGrowthRate = item.percent.Replace("%", "").TryToFloat()
-                });
+                        Date = date.Value,
+                        UnitNetWorth = unitNetWorth,
+                        AccumulatedNetWorth = accumulatedNetWorth,
+                        DailyGrowthRate = item.percent.Replace("%", "").TryToFloat()
+                    });
+                }
             }
             return modellist;
         }

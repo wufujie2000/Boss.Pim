@@ -1,10 +1,38 @@
+SELECT fun.TypeName,
+       fun.DkhsCode,
+       fun.Code,
+       fun.Name,
+       fun.ShortName
+FROM dbo.FundCenter_Funds fun
+    LEFT JOIN dbo.FundCenter_NetWorths net
+        ON fun.Code = net.FundCode
+WHERE net.Id IS NULL
+      AND TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒÐÍ', 'Àí²ÆÐÍ', 'ÆäËû´´ÐÂ', 'Õ®È¯´´ÐÂ-³¡ÄÚ', 'ÆäËû' )
+      AND NOT EXISTS
+(
+    SELECT 1 FROM dbo.FundCenter_NotTradeFunds nt WHERE nt.FundCode = fun.Code
+);
+
+
+
+
+
 SELECT DISTINCT
     fun.DkhsCode,
-    fun.Code
+    fun.Code,
+    COUNT(1)
 FROM dbo.FundCenter_Funds fun
-    INNER JOIN dbo.FundCenter_NetWorths net
+    LEFT JOIN dbo.FundCenter_NetWorths net
         ON fun.Code = net.FundCode
-WHERE Date >= '2018-03-30'
+WHERE fun.TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒÐÍ', 'Àí²ÆÐÍ', 'ÆäËû´´ÐÂ', 'Õ®È¯´´ÐÂ-³¡ÄÚ', 'ÆäËû' )
+      AND NOT EXISTS
+(
+    SELECT 1 FROM dbo.FundCenter_NotTradeFunds nt WHERE nt.FundCode = fun.Code
+)
+      AND (
+              Date >= GETDATE() - 120
+              OR net.Id IS NULL
+          )
 GROUP BY fun.Code,
          fun.DkhsCode
 HAVING COUNT(1) <
@@ -12,10 +40,12 @@ HAVING COUNT(1) <
     SELECT TOP 1
         COUNT(1)
     FROM dbo.FundCenter_NetWorths
-    WHERE Date >= '2018-03-30'
+    WHERE Date >= GETDATE() - 120
     GROUP BY FundCode
     ORDER BY COUNT(1) DESC
-);
+)
+ORDER BY COUNT(1) DESC;
+
 
 
 
@@ -38,6 +68,31 @@ WHERE fun.TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒÐÍ', 'Àí²ÆÐÍ', 'ÆäËû´´ÐÂ', 'Õ®È¯´´Ð
     FROM dbo.FundCenter_NotTradeFunds net
     WHERE fun.Code = net.FundCode
 );
+
+
+SELECT *
+FROM dbo.FundCenter_NetWorths
+WHERE FundCode IN
+      (
+          SELECT fun.Code
+          FROM dbo.FundCenter_Funds fun
+          WHERE fun.TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒÐÍ', 'Àí²ÆÐÍ', 'ÆäËû´´ÐÂ', 'Õ®È¯´´ÐÂ-³¡ÄÚ', 'ÆäËû' )
+                AND NOT EXISTS
+          (
+              SELECT 1
+              FROM dbo.FundCenter_NetWorthPeriodAnalyses net
+              WHERE fun.Code = net.FundCode
+                    AND DATEDIFF(DAY, net.PeriodStartDate, GETDATE()) = 0
+                    AND net.PeriodDays = 10
+          )
+                AND NOT EXISTS
+          (
+              SELECT 1
+              FROM dbo.FundCenter_NotTradeFunds net
+              WHERE fun.Code = net.FundCode
+          )
+      )
+ORDER BY FundCode,Date DESC;
 
 
 
@@ -65,8 +120,6 @@ WHERE fun.TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒÐÍ', 'Àí²ÆÐÍ', 'ÆäËû´´ÐÂ', 'Õ®È¯´´Ð
     WHERE fun.Code = net.FundCode
 );
 
-
-SELECT TOP 100 * FROM dbo.FundCenter_NetWorthPeriodAnalyses ORDER BY CreationTime DESC
 
 
 --É¾³ýÖØ¸´¾»Öµ·ÖÎö
@@ -116,10 +169,15 @@ WHERE Id IN
           FROM dbo.FundCenter_PeriodIncreases
           GROUP BY Title,
                    FundCode,
-                   ClosingDate
+                   CreationTime
           HAVING COUNT(1) > 1
       );
 
 
+
+
+
+DELETE dbo.FundCenter_NetWorths
+WHERE UnitNetWorth <= 0;
 
 

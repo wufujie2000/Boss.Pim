@@ -20,32 +20,29 @@ namespace Boss.Pim.Funds.Services
 
         public async Task Insert(ICollection<string> funds)
         {
-            //using (var uow = UnitOfWorkManager.Begin())
+            List<PeriodIncrease> modellist = new List<PeriodIncrease>();
+            foreach (var fund in funds.Distinct().ToList())
             {
-                List<PeriodIncrease> modellist = new List<PeriodIncrease>();
-                foreach (var fund in funds.Distinct().ToList())
+                if (string.IsNullOrWhiteSpace(fund))
                 {
-                    if (string.IsNullOrWhiteSpace(fund))
+                    continue;
+                }
+                try
+                {
+                    var itemmodellist = await Download(fund);
+                    if (itemmodellist != null)
                     {
-                        continue;
-                    }
-                    try
-                    {
-                        var itemmodellist = await Download(fund);
-                        if (itemmodellist != null)
-                        {
-                            modellist.AddRange(itemmodellist);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(fund + " " + e.Message, e);
+                        modellist.AddRange(itemmodellist);
                     }
                 }
-                if (modellist.Count > 0)
+                catch (Exception e)
                 {
-                    await CheckAndInsert(modellist);
+                    Logger.Error(fund + " " + e.Message, e);
                 }
+            }
+            if (modellist.Count > 0)
+            {
+                await CheckAndInsert(modellist);
             }
         }
         private async Task<List<PeriodIncrease>> Download(string fundCode, string range = "")
@@ -103,10 +100,10 @@ namespace Boss.Pim.Funds.Services
                 {
                     foreach (var item in execList)
                     {
-                        if (PeriodIncreaseRepository.GetAll().Any(a => a.FundCode == item.FundCode && a.Title == item.Title && a.ClosingDate == item.ClosingDate))
-                        {
-                            continue;
-                        }
+                        //if (PeriodIncreaseRepository.GetAll().Any(a => a.FundCode == item.FundCode && a.Title == item.Title && (a.CreationTime == item.CreationTime || a.LastModificationTime == item.LastModificationTime)))
+                        //{
+                        //    continue;
+                        //}
                         await PeriodIncreaseRepository.InsertAsync(item);
                     }
                     await uow.CompleteAsync();

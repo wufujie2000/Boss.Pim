@@ -13,26 +13,26 @@ WHERE IsOptional = 0
       --    (
       --        SELECT FundCode FROM dbo.FundCenter_Analyses WHERE Score > 75
       --    )
-      AND Code IN
-          (
-              SELECT DISTINCT
-                  per.FundCode
-              FROM dbo.FundCenter_PeriodIncreases per
-              WHERE (
-                        per.Title IN ( N'Z' )
-                        AND ISNULL(per.ReturnRate, 999) >= 2
-                        OR per.Title IN ( N'Y' )
-                           AND ISNULL(per.ReturnRate, 999) >= 3
-                        OR per.Title IN ( N'3Y' )
-                           AND ISNULL(per.ReturnRate, 999) >= 5
-                        OR per.Title IN ( N'6Y' )
-                           AND ISNULL(per.ReturnRate, 999) >= 8
-                        OR per.Title IN ( N'1N' )
-                           AND ISNULL(per.ReturnRate, 999) >= 15
-                        OR per.Title IN ( N'2N' )
-                           AND ISNULL(per.ReturnRate, 999) >= 40
-                    )
-          )
+      --AND Code IN
+      --    (
+      --        SELECT DISTINCT
+      --            per.FundCode
+      --        FROM dbo.FundCenter_PeriodIncreases per
+      --        WHERE (
+      --                  per.Title IN ( N'Z' )
+      --                  AND ISNULL(per.ReturnRate, 999) >= 2
+      --                  OR per.Title IN ( N'Y' )
+      --                     AND ISNULL(per.ReturnRate, 999) >= 3
+      --                  OR per.Title IN ( N'3Y' )
+      --                     AND ISNULL(per.ReturnRate, 999) >= 5
+      --                  OR per.Title IN ( N'6Y' )
+      --                     AND ISNULL(per.ReturnRate, 999) >= 8
+      --                  OR per.Title IN ( N'1N' )
+      --                     AND ISNULL(per.ReturnRate, 999) >= 15
+      --                  OR per.Title IN ( N'2N' )
+      --                     AND ISNULL(per.ReturnRate, 999) >= 40
+      --              )
+      --    )
       AND (
               Code IN
               (
@@ -97,15 +97,19 @@ WHERE IsOptional = 0
                                OR GalaxyRating5 IN ( 5 )
                            )
                  )
-              OR Code IN
-                 (
-                     --业绩排名考前的基金
-                     SELECT DISTINCT
-                         per.FundCode
-                     FROM FundCenter_PeriodIncreases per
-                     WHERE Rank > 0
-                           AND ROUND((CONVERT(FLOAT, per.Rank) / CONVERT(FLOAT, per.SameTypeTotalQty)), 5) < 0.0446
-                           AND per.Title IN ( 'Z', 'Y', '3Y', '6Y' )
+              OR (Code IN
+                  (
+                      --业绩排名考前的基金
+                      SELECT DISTINCT
+                          per.FundCode
+                      FROM FundCenter_PeriodIncreases per
+                      WHERE Rank > 0
+                            AND ROUND((CONVERT(FLOAT, per.Rank) / CONVERT(FLOAT, per.SameTypeTotalQty)), 5) <= 0.1
+                            AND (
+                                    DATEDIFF(DAY, per.CreationTime, GETDATE()) = 0
+                                    OR DATEDIFF(DAY, per.LastModificationTime, GETDATE()) = 0
+                                )
+                  )
                  )
           );
 
@@ -117,6 +121,8 @@ WHERE IsOptional = 0
           (
               SELECT DISTINCT FundCode FROM dbo.FundCenter_TradeRecords
           );
+
+
 
 
 SELECT fun.TypeName 基金分类,
@@ -134,43 +140,13 @@ FROM dbo.FundCenter_Funds fun
         ON ana.FundCode = fun.Code
 WHERE Rank > 0
       AND fun.TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创新', '债券创新-场内', '其他' )
-      --AND fun.Code IN
-      --    (
-      --        SELECT DISTINCT
-      --            per.FundCode
-      --        FROM dbo.FundCenter_PeriodIncreases per
-      --        WHERE (
-      --                  per.Title IN ( N'Z' )
-      --                  AND ISNULL(per.ReturnRate, 999) >= 5
-      --                  OR per.Title IN ( N'Y' )
-      --                     AND ISNULL(per.ReturnRate, 999) >= 6
-      --                  OR per.Title IN ( N'3Y' )
-      --                     AND ISNULL(per.ReturnRate, 999) >= 7
-      --                  OR per.Title IN ( N'6Y' )
-      --                     AND ISNULL(per.ReturnRate, 999) >= 8
-      --                  OR per.Title IN ( N'1N' )
-      --                     AND ISNULL(per.ReturnRate, 999) >= 20
-      --                  OR per.Title IN ( N'2N' )
-      --                     AND ISNULL(per.ReturnRate, 999) >= 40
-      --              )
-      --    )
-      --AND fun.IsOptional = 0
-      --AND ana.Score < 60
-      AND ROUND((CONVERT(FLOAT, per.Rank) / CONVERT(FLOAT, per.SameTypeTotalQty)), 5) < 0.0446
-      AND per.Title IN ( 'Z', 'Y', '3Y', '6Y' )
-      AND fun.Code IN ( '519601' )
+      AND ROUND((CONVERT(FLOAT, per.Rank) / CONVERT(FLOAT, per.SameTypeTotalQty)), 5) <= 0.1
+      AND (
+              DATEDIFF(DAY, per.CreationTime, GETDATE()) = 0
+              OR DATEDIFF(DAY, per.LastModificationTime, GETDATE()) = 0
+          )
 ORDER BY ROUND((CONVERT(FLOAT, per.Rank) / CONVERT(FLOAT, per.SameTypeTotalQty)), 5);
 
 
 
-
-
-
---SELECT *
---FROM dbo.FundCenter_Funds
---WHERE TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创新', '债券创新-场内', '其他' )
---      AND Code NOT IN
---          (
---              SELECT FundCode FROM dbo.FundCenter_NotTradeFunds
---          );
 

@@ -76,30 +76,21 @@ namespace Boss.Pim.Funds
         {
             bool isLast = false;
             Logger.Info($"开始下载 NetWorthPeriodAnalyse 第{page}页，每页{size}条");
-            using (var conn = new SqlConnection(SQLUtil.DefaultConnStr))
+            var today = DateTime.Now.Date;
+            var notquery = Repository.GetAll()
+                .Where(a => a.PeriodStartDate == today)
+                .Select(a => a.FundCode).Distinct();
+            var funds = FundDomainService.GetQuery()
+                .Where(a => !notquery.Contains(a.Code))
+                .OrderBy(a => a.Id).PageIndex(page, size).Select(a => a.Code).ToList();
+            if (funds.Count < size)
             {
-                conn.Execute(@"
-DELETE dbo.FundCenter_NetWorthPeriodAnalyses
-WHERE Id IN
-      (
-          SELECT MAX(CONVERT(VARCHAR(64), Id))
-          FROM dbo.FundCenter_NetWorthPeriodAnalyses
-          GROUP BY FundCode,
-                   PeriodStartDate,
-                   PeriodDays
-          HAVING COUNT(1) > 1
-      );
-            ");
-                var funds = FundDomainService.GetQuery().OrderBy(a => a.Id).PageIndex(page, size).Select(a => a.Code).ToList();
-                if (funds.Count < size)
-                {
-                    isLast = true;
-                }
-                if (funds.Count > 0)
-                {
-                    //await BackgroundJobManager.EnqueueAsync<InsertNetWorthPeriodAnalyseJob, ICollection<string>>(funds);
-                    await NetWorthPeriodAnalyseManager.Insert(funds);
-                }
+                isLast = true;
+            }
+            if (funds.Count > 0)
+            {
+                //await BackgroundJobManager.EnqueueAsync<InsertNetWorthPeriodAnalyseJob, ICollection<string>>(funds);
+                await NetWorthPeriodAnalyseManager.Insert(funds);
             }
             Logger.Info($"NetWorthPeriodAnalyse 下载完成 第{page}页，每页{size}条");
             return isLast;

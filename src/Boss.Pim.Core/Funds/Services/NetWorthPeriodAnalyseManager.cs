@@ -93,23 +93,23 @@ namespace Boss.Pim.Funds.Services
                 PeriodDays = days,
                 PeriodStartDate = startDate.Date,
 
-                Avg = avg.RoundDigits(),
-                BoWave = bowave.RoundDigits(),
-                DieFu = diefu.RoundDigits(),
-                GreatBuy = greatbuy.RoundDigits(),
-                GreatSale = greatsale.RoundDigits(),
-                Later = later.RoundDigits(),
-                Max = max.RoundDigits(),
-                MaxAvg = maxavg.RoundDigits(),
-                MaxLoseCent = maxlosecent.RoundDigits(),
-                MaxPayCent = maxpaycent.RoundDigits(),
-                Min = min.RoundDigits(),
-                MinAvg = minavg.RoundDigits(),
-                PayWaveRate = paywaverate.RoundDigits(),
-                SafeHigh = safehigh.RoundDigits(),
-                SafeLow = safelow.RoundDigits(),
-                SafeTradeCent = safetradecent.RoundDigits(),
-                ZhangFu = zhangfu.RoundDigits()
+                Avg = avg,
+                BoWave = bowave,
+                DieFu = diefu,
+                GreatBuy = greatbuy,
+                GreatSale = greatsale,
+                Later = later,
+                Max = max,
+                MaxAvg = maxavg,
+                MaxLoseCent = maxlosecent,
+                MaxPayCent = maxpaycent,
+                Min = min,
+                MinAvg = minavg,
+                PayWaveRate = paywaverate,
+                SafeHigh = safehigh,
+                SafeLow = safelow,
+                SafeTradeCent = safetradecent,
+                ZhangFu = zhangfu
             };
         }
 
@@ -136,29 +136,7 @@ namespace Boss.Pim.Funds.Services
                 {
                     foreach (var item in list)
                     {
-                        await GuessPrejudgementRepository.InsertAsync(new NetWorthPeriodAnalyse
-                        {
-                            Avg = item.Avg.RoundDigits(),
-                            BoWave = item.BoWave.RoundDigits(),
-                            DieFu = item.DieFu.RoundDigits(),
-                            FundCode = item.FundCode,
-                            GreatBuy = item.GreatBuy.RoundDigits(),
-                            GreatSale = item.GreatSale.RoundDigits(),
-                            Later = item.Later.RoundDigits(),
-                            Max = item.Max.RoundDigits(),
-                            MaxAvg = item.MaxAvg.RoundDigits(),
-                            MaxLoseCent = item.MaxLoseCent.RoundDigits(),
-                            MaxPayCent = item.MaxPayCent.RoundDigits(),
-                            Min = item.Min.RoundDigits(),
-                            MinAvg = item.MinAvg.RoundDigits(),
-                            PayWaveRate = item.PayWaveRate.RoundDigits(),
-                            PeriodDays = item.PeriodDays,
-                            PeriodStartDate = item.PeriodStartDate,
-                            SafeHigh = item.SafeHigh.RoundDigits(),
-                            SafeLow = item.SafeLow.RoundDigits(),
-                            SafeTradeCent = item.SafeTradeCent.RoundDigits(),
-                            ZhangFu = item.ZhangFu.RoundDigits()
-                        });
+                        await GuessPrejudgementRepository.InsertAsync(item);
                     }
                     await uow.CompleteAsync();
                 }
@@ -202,28 +180,24 @@ namespace Boss.Pim.Funds.Services
         {
             var statrDate = DateTime.Now.Date;
             var minStartDate = statrDate.AddDays(-120);
-            //using (var uow = UnitOfWorkManager.Begin())
+            var newWorthModellist = await NetWorthRepository.GetAllListAsync(a => funds.Contains(a.FundCode) && a.Date >= minStartDate && a.UnitNetWorth > 0);
+            foreach (var fund in funds)
             {
-                foreach (var fund in funds)
+                if (string.IsNullOrWhiteSpace(fund))
                 {
-                    if (string.IsNullOrWhiteSpace(fund))
+                    continue;
+                }
+                try
+                {
+                    var itemmodellist = CalcGuessPrejudgementSplit10Days(fund, newWorthModellist, statrDate);
+                    if (itemmodellist != null)
                     {
-                        continue;
+                        await CheckAndInsert(itemmodellist, fund, statrDate);
                     }
-                    try
-                    {
-                        var newWorthModellist = await NetWorthRepository.GetAllListAsync(a => fund == a.FundCode && a.Date >= minStartDate);
-
-                        var itemmodellist = CalcGuessPrejudgementSplit10Days(fund, newWorthModellist, statrDate);
-                        if (itemmodellist != null)
-                        {
-                            await CheckAndInsert(itemmodellist, fund, statrDate);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Error(fund + " " + e.Message, e);
-                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(fund + " " + e.Message, e);
                 }
             }
         }

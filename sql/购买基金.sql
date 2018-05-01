@@ -1,13 +1,8 @@
 DECLARE @PeriodStartDate DATETIME;
 DECLARE @PeriodIncreaseDate DATETIME;
 DECLARE @NetWorthDate DATETIME;
-DECLARE @SellDate DATETIME;
 
-SET @NetWorthDate =
-(
-    SELECT MAX(PeriodStartDate) FROM dbo.FundCenter_NetWorthPeriodAnalyses
-);
-SET @SellDate = @NetWorthDate + 7;
+SET @NetWorthDate = GETDATE();
 SET @PeriodIncreaseDate = @NetWorthDate;
 SET @PeriodStartDate = @NetWorthDate;
 
@@ -115,15 +110,9 @@ FROM
            fun.ShortName 基金名称,
            fun.Code 基金编码,
            CONVERT(VARCHAR(32), val.EstimatedTime, 20) 时间,
-           val.ReturnRate 涨幅,
-           ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 1) 近3月排比,
-           ROUND(CONVERT(FLOAT, ISNULL(y6.Rank, -1)) / y6.SameTypeTotalQty, 1) 近6月排比,
-           ROUND(CONVERT(FLOAT, ISNULL(y.Rank, -1)) / y.SameTypeTotalQty, 1) 近1月排比,
+           val.ReturnRate 估值,
            ROUND(CONVERT(FLOAT, ISNULL(z.Rank, -1)) / z.SameTypeTotalQty, 1) 近1周排比,
            ROUND(CONVERT(FLOAT, ISNULL(n1.Rank, -1)) / n1.SameTypeTotalQty, 1) 近1年排比,
-           ROUND(CONVERT(FLOAT, ISNULL(n2.Rank, -1)) / n2.SameTypeTotalQty, 1) 近2年排比,
-           ROUND(CONVERT(FLOAT, ISNULL(n3.Rank, -1)) / n3.SameTypeTotalQty, 1) 近3年排比,
-           ROUND(CONVERT(FLOAT, ISNULL(n5.Rank, -1)) / n5.SameTypeTotalQty, 1) 近5年排比,
            ROUND((#dtGreat.GreatSale / val.EstimatedUnitNetWorth - 1) * 100, 4) 买收益,
            ROUND((val.EstimatedUnitNetWorth / #dtGreat.GreatBuy - 1) * 100, 4) 买建议,
            rate.Title 费率范围,
@@ -156,11 +145,20 @@ FROM
            ana.IndexFollowing 指数评分,
            ana.Experience 经验评分,
            ana.AnalyseDescription 分析描述,
+           ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 1) 近3月排比,
+           ROUND(CONVERT(FLOAT, ISNULL(y6.Rank, -1)) / y6.SameTypeTotalQty, 1) 近6月排比,
+           ROUND(CONVERT(FLOAT, ISNULL(y.Rank, -1)) / y.SameTypeTotalQty, 1) 近1月排比,
+           ROUND(CONVERT(FLOAT, ISNULL(n2.Rank, -1)) / n2.SameTypeTotalQty, 1) 近2年排比,
+           ROUND(CONVERT(FLOAT, ISNULL(n3.Rank, -1)) / n3.SameTypeTotalQty, 1) 近3年排比,
+           ROUND(CONVERT(FLOAT, ISNULL(n5.Rank, -1)) / n5.SameTypeTotalQty, 1) 近5年排比,
            fun.DkhsCode
     FROM dbo.FundCenter_Funds fun
         INNER JOIN dbo.FundCenter_Valuations val
             ON val.FundCode = fun.Code
-               AND DATEDIFF(DAY, @NetWorthDate, val.EstimatedTime) = 0
+               AND (
+                       DATEDIFF(DAY, val.CreationTime, @NetWorthDate) = 0
+                       OR DATEDIFF(DAY, val.LastModificationTime, @NetWorthDate) = 0
+                   )
         LEFT JOIN #dtGreat
             ON #dtGreat.Code = fun.Code
         LEFT JOIN dbo.FundCenter_PeriodIncreases n5
@@ -247,41 +245,65 @@ FROM
 
 
 
-SELECT TOP 500
-    *
-FROM #dtGuess
---WHERE ISNULL(近3月排比, 1) <= 0.09
---      AND ISNULL(近1月排比, 1) <= 0.09
---      AND ISNULL(近6月排比, 1) <= 0.09
---      AND ISNULL(近1年排比, -1) <= 0.1
---      AND ISNULL(近1周排比, -1) <= 0.1
---      AND 买建议 > 5
---      AND 买收益 > 5
---AND 评分 > 60
---AND 中期评分 > 60
---AND 短期评分 > 60
-ORDER BY
-    --实涨幅 DESC,
-    近3月排比,
-    近1月排比,
-    近6月排比,
-    买收益 DESC,
-    买建议 DESC,
-    近1周排比,
-    近1年排比;
+IF OBJECT_ID('tempdb..#dtWillBuy') IS NOT NULL
+    DROP TABLE #dtWillBuy;
+SELECT *
+INTO #dtWillBuy
+FROM
+(
+    SELECT TOP 500
+        *
+    FROM #dtGuess
+    WHERE ISNULL(近3月排比, 1) <= 0.09
+          AND ISNULL(近1月排比, 1) <= 0.09
+          AND ISNULL(近6月排比, 1) <= 0.09
+          AND ISNULL(近1年排比, -1) <= 0.1
+          AND ISNULL(近1周排比, -1) <= 0.1
+          AND 买建议 > 2.5
+          AND 买收益 > 2.5
+    --AND 评分 > 60
+    --AND 中期评分 > 60
+    --AND 短期评分 > 60
+    ORDER BY
+        --实涨幅 DESC,
+        近3月排比,
+        近1月排比,
+        近6月排比,
+        近1周排比,
+        近1年排比,
+        买收益 DESC,
+        买建议 DESC
+) w;
 
 
+SELECT *
+FROM #dtWillBuy;
 
---SELECT AVG(实涨幅) 涨幅,
---       COUNT(1) 数量
---FROM #dtActual
---WHERE 买建议 > 5
---      AND 买收益 > 5
---      AND ISNULL(近3月排比, 1) <= 0.1
---      AND ISNULL(近1月排比, 1) < 0.1
---      AND ISNULL(近6月排比, 1) < 0.1
---      AND ISNULL(近1周排比, -1) < 0.4
---      AND ISNULL(近1年排比, -1) < 0.4
---      AND 评分 > 60
---      AND 中期评分 > 60
---      AND 短期评分 > 60;
+SELECT GreatBuy 最低买入值,
+       GreatSale 最高卖出值,
+       CONVERT(VARCHAR(32),PeriodStartDate,23) 阶段起点日期,
+       PeriodDays 阶段天数,
+       Avg 平均值,
+       Later 月末值,
+       Max 最大值,
+       Min 最小值,
+       MaxAvg 平均最大值,
+       MinAvg 平均最小值,
+       DieFu 跌幅值,
+       ZhangFu 涨幅值,
+       BoWave 波动值,
+       SafeLow 安全期最低值,
+       SafeHigh 安全期最高值,
+       SafeTradeCent 安全期买卖价,
+       PayWaveRate 盈利波动,
+       MaxPayCent 最大盈利值,
+       MaxLoseCent 最大亏损净值,
+       FundCode
+FROM dbo.FundCenter_NetWorthPeriodAnalyses
+WHERE FundCode IN
+      (
+          SELECT 基金编码 FROM #dtWillBuy
+      )
+      AND DATEDIFF(DAY, PeriodStartDate, @PeriodStartDate) = 0
+ORDER BY FundCode,
+         PeriodDays;

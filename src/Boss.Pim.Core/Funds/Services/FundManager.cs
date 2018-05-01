@@ -60,17 +60,21 @@ namespace Boss.Pim.Funds.Services
             return query;
         }
 
-        public async Task CheckInsertNetWorth(List<NetWorth> list, string fundCode)
+        public List<NetWorth> GetNoExistsNetWorth(List<NetWorth> list, string fundCode)
         {
-            int size = 50;
-            int page = 1;
 
             var strList = list.Select(c => c.Date).Distinct().ToList();
             var dbExistsList = NetWorthRepository.GetAll().Where(s => strList.Contains(s.Date) && s.FundCode == fundCode)
                 .Select(b => b.Date).Distinct().ToList();
             List<NetWorth> notExistsList = new List<NetWorth>();
             ListAddIfExists(list.Where(a => !dbExistsList.Contains(a.Date)).Distinct().ToList(), notExistsList);
+            return notExistsList;
+        }
 
+        public async Task Insert(List<NetWorth> notExistsList)
+        {
+            int size = 50;
+            int page = 1;
             while (true)
             {
                 var execList = notExistsList.Skip((page - 1) * size).Take(size).ToList();
@@ -82,7 +86,10 @@ namespace Boss.Pim.Funds.Services
                 {
                     foreach (var item in execList)
                     {
-                        await NetWorthRepository.InsertAsync(item);
+                        if (item.UnitNetWorth > 0)
+                        {
+                            await NetWorthRepository.InsertAsync(item);
+                        }
                     }
                     await uow.CompleteAsync();
                 }
@@ -90,9 +97,8 @@ namespace Boss.Pim.Funds.Services
             }
         }
 
-        public async Task<bool> CheckInsertFundRank(List<FundRank> list)
+        public async Task CheckInsertFundRank(List<FundRank> list)
         {
-            int existCounts = 1;
             int size = 50;
             int page = 1;
             while (true)
@@ -110,16 +116,11 @@ namespace Boss.Pim.Funds.Services
                         {
                             await FundRankRepository.InsertAsync(item);
                         }
-                        else
-                        {
-                            existCounts++;
-                        }
                     }
                     await uow.CompleteAsync();
                 }
                 page++;
             }
-            return existCounts == list.Count;
         }
 
         public async Task InsertOrUpdateAnalyses(List<Analyse> list)

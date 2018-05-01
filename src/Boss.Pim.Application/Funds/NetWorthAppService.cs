@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace Boss.Pim.Funds
 {
     public class NetWorthAppService : AsyncCrudAppService<NetWorth, NetWorthDto, Guid>, INetWorthAppService
     {
-        public FundManager FundDomainService { get; set; }
+        public FundManager FundManager { get; set; }
         public NetWorthManager NetWorthManager { get; set; }
         public NetWorthPeriodAnalyseManager NetWorthPeriodAnalyseManager { get; set; }
 
@@ -28,40 +29,39 @@ namespace Boss.Pim.Funds
         {
             Logger.Info("开始下载更新 NetWorth ");
             var list = await AsyncQueryableExecuter.ToListAsync(
-                 FundDomainService.GetQuery().Select(a => new { a.Code, a.DkhsCode })
+                 FundManager.GetQuery().Select(a => new { a.Code, a.DkhsCode })
                  );
+            List<NetWorth> notExistsList = new List<NetWorth>();
             foreach (var fund in list)
             {
-                try
+                var willExecList = await GetNoExistsNetWorth(fund.Code, fund.DkhsCode, 2);
+                if (willExecList != null && willExecList.Count > 0)
                 {
-                    var modellist = await NetWorthManager.DownloadNetWorthByDkhs(fund.Code, fund.DkhsCode, 5);
-                    if (modellist.Count > 0)
-                    {
-                        await FundDomainService.CheckInsertNetWorth(modellist, fund.Code);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(fund.Code + " " + e.Message, e);
+                    notExistsList.AddRange(willExecList);
                 }
             }
+            await FundManager.Insert(notExistsList);
             Logger.Info("更新 NetWorth 完成");
         }
+
+
 
         public async Task DownloadByDays(string fundCode, int page, int size)
         {
             var fundCodes = fundCode.ToStringArray();
             var list = await AsyncQueryableExecuter.ToListAsync(
-              FundDomainService.GetQuery().Where(a => fundCodes.Contains(a.Code)).Select(a => new { a.Code, a.DkhsCode })
+              FundManager.GetQuery().Where(a => fundCodes.Contains(a.Code)).Select(a => new { a.Code, a.DkhsCode })
               );
+            List<NetWorth> notExistsList = new List<NetWorth>();
             foreach (var fund in list)
             {
-                var modellist = await NetWorthManager.DownloadNetWorthByDkhs(fund.Code, fund.DkhsCode, size, page);
-                if (modellist.Count > 0)
+                var willExecList = await GetNoExistsNetWorth(fund.Code, fund.DkhsCode, size, page);
+                if (willExecList != null && willExecList.Count > 0)
                 {
-                    await FundDomainService.CheckInsertNetWorth(modellist, fund.Code);
+                    notExistsList.AddRange(willExecList);
                 }
             }
+            await FundManager.Insert(notExistsList);
         }
 
         public async Task DownloadCheck()
@@ -71,9 +71,17 @@ SELECT DISTINCT
     fun.DkhsCode,
     fun.Code
 FROM dbo.FundCenter_Funds fun
-    INNER JOIN dbo.FundCenter_NetWorths net
+    LEFT JOIN dbo.FundCenter_NetWorths net
         ON fun.Code = net.FundCode
-WHERE Date >= '2018-03-30'
+WHERE fun.TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创新', '债券创新-场内', '其他' )
+      AND NOT EXISTS
+(
+    SELECT 1 FROM dbo.FundCenter_NotTradeFunds nt WHERE nt.FundCode = fun.Code
+)
+      AND (
+              Date >= GETDATE() - 120
+              OR net.Id IS NULL
+          )
 GROUP BY fun.Code,
          fun.DkhsCode
 HAVING COUNT(1) <
@@ -81,23 +89,46 @@ HAVING COUNT(1) <
     SELECT TOP 1
         COUNT(1)
     FROM dbo.FundCenter_NetWorths
-    WHERE Date >= '2018-03-30'
+    WHERE Date >= GETDATE() - 120
     GROUP BY FundCode
     ORDER BY COUNT(1) DESC
-);
+)
 ";
             using (var conn = new SqlConnection(SQLUtil.DefaultConnStr))
             {
                 var list = conn.Query(sql);
+
+                List<NetWorth> notExistsList = new List<NetWorth>();
                 foreach (var fund in list)
                 {
-                    var modellist = await NetWorthManager.DownloadNetWorthByDkhs(fund.Code, fund.DkhsCode, 8);
-                    if (modellist.Count > 0)
+                    string fundCode = fund.Code;
+                    string dkhsCode = fund.DkhsCode;
+                    var willExecList = await GetNoExistsNetWorth(fundCode, dkhsCode, 100);
+                    if (willExecList != null && willExecList.Count > 0)
                     {
-                        await FundDomainService.CheckInsertNetWorth(modellist, fund.Code);
+                        notExistsList.AddRange(willExecList);
                     }
                 }
+                await FundManager.Insert(notExistsList);
             }
+        }
+
+        public async Task<List<NetWorth>> GetNoExistsNetWorth(string fundCode, string dkhsCode, int sise, int page = 1)
+        {
+            List<NetWorth> result = null;
+            try
+            {
+                var modellist = await NetWorthManager.DownloadNetWorthByDkhs(fundCode, dkhsCode, sise, page);
+                if (modellist.Count > 0)
+                {
+                    result = FundManager.GetNoExistsNetWorth(modellist, fundCode);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error(fundCode + " " + e.Message, e);
+            }
+            return result;
         }
 
         #region 初始化下载

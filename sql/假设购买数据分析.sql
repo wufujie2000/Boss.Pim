@@ -115,17 +115,11 @@ FROM
            val.DailyGrowthRate 涨幅,
            ROUND((#dtGreat.GreatSale / val.UnitNetWorth - 1) * 100, 4) 买收益,
            ROUND((val.UnitNetWorth / #dtGreat.GreatBuy - 1) * 100, 4) 买建议,
-           ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 1) 近3月排比,
-           ROUND(CONVERT(FLOAT, ISNULL(y6.Rank, -1)) / y6.SameTypeTotalQty, 1) 近6月排比,
-           ROUND(CONVERT(FLOAT, ISNULL(y.Rank, -1)) / y.SameTypeTotalQty, 1) 近1月排比,
            ROUND(CONVERT(FLOAT, ISNULL(z.Rank, -1)) / z.SameTypeTotalQty, 1) 近1周排比,
            ROUND(CONVERT(FLOAT, ISNULL(n1.Rank, -1)) / n1.SameTypeTotalQty, 1) 近1年排比,
-           ROUND(CONVERT(FLOAT, ISNULL(n2.Rank, -1)) / n2.SameTypeTotalQty, 1) 近2年排比,
-           ROUND(CONVERT(FLOAT, ISNULL(n3.Rank, -1)) / n3.SameTypeTotalQty, 1) 近3年排比,
-           ROUND(CONVERT(FLOAT, ISNULL(n5.Rank, -1)) / n5.SameTypeTotalQty, 1) 近5年排比,
            y3.Rank 近3月排名,
-           y6.Rank 近6月排名,
            y.Rank 近1月排名,
+           y6.Rank 近6月排名,
            z.Rank 近1周排名,
            n1.Rank 近1年排名,
            z.SameTypeTotalQty 同类基金总数,
@@ -151,6 +145,12 @@ FROM
            ana.IndexFollowing 指数评分,
            ana.Experience 经验评分,
            ana.AnalyseDescription 分析描述,
+           ROUND(CONVERT(FLOAT, ISNULL(y3.Rank, -1)) / y3.SameTypeTotalQty, 1) 近3月排比,
+           ROUND(CONVERT(FLOAT, ISNULL(y.Rank, -1)) / y.SameTypeTotalQty, 1) 近1月排比,
+           ROUND(CONVERT(FLOAT, ISNULL(y6.Rank, -1)) / y6.SameTypeTotalQty, 1) 近6月排比,
+           ROUND(CONVERT(FLOAT, ISNULL(n2.Rank, -1)) / n2.SameTypeTotalQty, 1) 近2年排比,
+           ROUND(CONVERT(FLOAT, ISNULL(n3.Rank, -1)) / n3.SameTypeTotalQty, 1) 近3年排比,
+           ROUND(CONVERT(FLOAT, ISNULL(n5.Rank, -1)) / n5.SameTypeTotalQty, 1) 近5年排比,
            fun.DkhsCode
     FROM dbo.FundCenter_Funds fun
         INNER JOIN dbo.FundCenter_NetWorths val
@@ -262,9 +262,15 @@ FROM
           AND DATEDIFF(DAY, sell.Date, @SellDate) = 0
 ) z;
 
+
+
+
+
+
 SELECT TOP 500
     *
 FROM #dtActual
+--WHERE 实涨幅>4
 WHERE ISNULL(近3月排比, 1) <= 0.09
       AND ISNULL(近1月排比, 1) <= 0.09
       AND ISNULL(近6月排比, 1) <= 0.09
@@ -280,9 +286,10 @@ ORDER BY
     近3月排比,
     近1月排比,
     近6月排比,
-    买收益 DESC,
-    买建议 DESC,
     近1周排比,
+	买收益 DESC,
+    买建议 DESC,
+    
     近1年排比;
 
 

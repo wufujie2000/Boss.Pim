@@ -44,34 +44,34 @@ WHERE IsOptional = 0
       --    (
       --        SELECT FundCode FROM dbo.FundCenter_Analyses WHERE Score > 75
       --    )
-      AND Code IN
-          (
-              SELECT DISTINCT
-                  per.FundCode
-              FROM dbo.FundCenter_PeriodIncreases per
-              WHERE (
-                        per.Title IN ( N'Z' )
-                        AND ISNULL(per.ReturnRate, 999) >= 2
-                        OR per.Title IN ( N'Y' )
-                           AND ISNULL(per.ReturnRate, 999) >= 3
-                        OR per.Title IN ( N'3Y' )
-                           AND ISNULL(per.ReturnRate, 999) >= 5
-                        OR per.Title IN ( N'6Y' )
-                           AND ISNULL(per.ReturnRate, 999) >= 8
-                        OR per.Title IN ( N'1N' )
-                           AND ISNULL(per.ReturnRate, 999) >= 15
-                        OR per.Title IN ( N'2N' )
-                           AND ISNULL(per.ReturnRate, 999) >= 40
-                    )
-          )
+      --AND Code IN
+      --    (
+      --        SELECT DISTINCT
+      --            per.FundCode
+      --        FROM dbo.FundCenter_PeriodIncreases per
+      --        WHERE (
+      --                  per.Title IN ( N'Z' )
+      --                  AND ISNULL(per.ReturnRate, 999) >= 2
+      --                  OR per.Title IN ( N'Y' )
+      --                     AND ISNULL(per.ReturnRate, 999) >= 3
+      --                  OR per.Title IN ( N'3Y' )
+      --                     AND ISNULL(per.ReturnRate, 999) >= 5
+      --                  OR per.Title IN ( N'6Y' )
+      --                     AND ISNULL(per.ReturnRate, 999) >= 8
+      --                  OR per.Title IN ( N'1N' )
+      --                     AND ISNULL(per.ReturnRate, 999) >= 15
+      --                  OR per.Title IN ( N'2N' )
+      --                     AND ISNULL(per.ReturnRate, 999) >= 40
+      --              )
+      --    )
       AND (
               Code IN
               (
                   SELECT FundCode
                   FROM dbo.FundCenter_RatingPools
                   WHERE (
-                            MstarRating3 IN ( 4, 5 )
-                            OR MstarRating5 IN ( 4, 5 )
+                            MstarRating3 IN ( 5 )
+                            OR MstarRating5 IN ( 5 )
                         )
               )
               OR Code IN
@@ -79,8 +79,8 @@ WHERE IsOptional = 0
                      SELECT FundCode
                      FROM dbo.FundCenter_RatingPools
                      WHERE (
-                               JajxRating3 IN ( 4, 5 )
-                               OR JajxRating5 IN ( 4, 5 )
+                               JajxRating3 IN ( 5 )
+                               OR JajxRating5 IN ( 5 )
                            )
                  )
               OR Code IN
@@ -88,8 +88,8 @@ WHERE IsOptional = 0
                      SELECT FundCode
                      FROM dbo.FundCenter_RatingPools
                      WHERE (
-                               ShsecRating3 IN ( 4, 5 )
-                               OR ShsecRating5 IN ( 4, 5 )
+                               ShsecRating3 IN ( 5 )
+                               OR ShsecRating5 IN ( 5 )
                            )
                  )
               OR Code IN
@@ -97,8 +97,8 @@ WHERE IsOptional = 0
                      SELECT FundCode
                      FROM dbo.FundCenter_RatingPools
                      WHERE (
-                               ZssecRating3 IN ( 4, 5 )
-                               OR ZssecRating5 IN ( 4, 5 )
+                               ZssecRating3 IN ( 5 )
+                               OR ZssecRating5 IN ( 5 )
                            )
                  )
               OR Code IN
@@ -135,10 +135,22 @@ WHERE IsOptional = 0
                          per.FundCode
                      FROM FundCenter_PeriodIncreases per
                      WHERE Rank > 0
-                           AND ROUND((CONVERT(FLOAT, per.Rank) / CONVERT(FLOAT, per.SameTypeTotalQty)), 5) < 0.0446
-                           AND per.Title IN ( 'Z', 'Y', '3Y', '6Y' )
+                           AND ROUND((CONVERT(FLOAT, per.Rank) / CONVERT(FLOAT, per.SameTypeTotalQty)), 5) <= 0.1
+                           AND (
+                                   DATEDIFF(DAY, per.CreationTime, GETDATE()) = 0
+                                   OR DATEDIFF(DAY, per.LastModificationTime, GETDATE()) = 0
+                               )
                  )
-          )
+          );
+
+
+UPDATE dbo.FundCenter_Funds
+SET IsOptional = 1
+WHERE IsOptional = 0
+      AND Code IN
+          (
+              SELECT DISTINCT FundCode FROM dbo.FundCenter_TradeRecords
+          );
 ";
 
             SQLUtil db = new SQLUtil();
