@@ -59,7 +59,7 @@ namespace Boss.Pim.Funds
         {
             int size = 50;
             int page = 1;
-
+            //每次查询都在减少，因此永远是第1页
             while (true)
             {
                 var isLast = await DownloadByPager(page, size);
@@ -67,7 +67,6 @@ namespace Boss.Pim.Funds
                 {
                     break;
                 }
-                page++;
             }
 
         }

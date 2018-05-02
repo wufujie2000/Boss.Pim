@@ -6,36 +6,66 @@
     var dt1 = ViewBag.dt1 as DataTable;
     var dt2 = ViewBag.dt2 as DataTable;
 }
-<div class="table-responsive">
+@section scripts
+{
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                filters: {
+                    y3: 0.09,
+                    y: 0.09,
+                    y6: 0.09,
+                    n1: 0.5,
+                    z: 0.5,
+                    sug: 5,
+                    pro: 5
+                },
+                showFilters: false
+            },
+            method: {
+
+            }
+        });
+    </script>
+}
+<div class="table-responsive" id="app">
     <form class="form-inline" action="/Fund/Index" method="get">
-        <div class="form-group">
-            <label>近3月排名比</label>
-            <input type="text" class="form-control" id="y3" name="y3" placeholder="近3月排名比" value="@(Request["y3"]??"0.09")">
+        <div v-show="showFilters">
+            <div class="form-group">
+                <label>日期</label>
+                <input type="text" class="form-control" id="date" name="date" placeholder="日期" value="@(Request["date"]??DateTime.Now.Date.ToString("yyyy-MM-dd"))">
+            </div>
+            <div class="form-group">
+                <label>近3月排名比</label>
+                <input type="text" class="form-control" id="y3" name="y3" placeholder="近3月排名比" value="@(Request["y3"]??"0.09")">
+            </div>
+            <div class="form-group">
+                <label>近1月排名比</label>
+                <input type="text" class="form-control" id="y" name="y" placeholder="近1月排名比" value="@(Request["y"]??"0.09")">
+            </div>
+            <div class="form-group">
+                <label>近6月排名比</label>
+                <input type="text" class="form-control" id="y6" name="y6" placeholder="近6月排名比" value="@(Request["y6"]??"0.09")">
+            </div>
+            <div class="form-group">
+                <label>近1年排名比</label>
+                <input type="text" class="form-control" id="n1" name="n1" placeholder="近1年排名比" value="@(Request["n1"]??"0.1")">
+            </div>
+            <div class="form-group">
+                <label>近1周排名比</label>
+                <input type="text" class="form-control" id="z" name="z" placeholder="近1周排名比" value="@(Request["n1"]??"0.1")">
+            </div>
+            <div class="form-group">
+                <label>买建议</label>
+                <input type="text" class="form-control" id="sug" name="sug" placeholder="买建议" value="@(Request["sug"]??"5")">
+            </div>
+            <div class="form-group">
+                <label>买收益</label>
+                <input type="text" class="form-control" id="pro" name="pro" placeholder="买收益" value="@(Request["sug"]??"5")">
+            </div>
         </div>
-        <div class="form-group">
-            <label>近1月排名比</label>
-            <input type="text" class="form-control" id="y" name="y" placeholder="近1月排名比" value="@(Request["y"]??"0.09")">
-        </div>
-        <div class="form-group">
-            <label>近6月排名比</label>
-            <input type="text" class="form-control" id="y6" name="y6" placeholder="近6月排名比" value="@(Request["y6"]??"0.09")">
-        </div>
-        <div class="form-group">
-            <label>近1年排名比</label>
-            <input type="text" class="form-control" id="n1" name="n1" placeholder="近1年排名比" value="@(Request["n1"]??"0.1")">
-        </div>
-        <div class="form-group">
-            <label>近1周排名比</label>
-            <input type="text" class="form-control" id="z" name="z" placeholder="近1周排名比" value="@(Request["n1"]??"0.1")">
-        </div>
-        <div class="form-group">
-            <label>买建议</label>
-            <input type="text" class="form-control" id="sug" name="sug" placeholder="买建议" value="@(Request["sug"]??"5")">
-        </div>
-        <div class="form-group">
-            <label>买收益</label>
-            <input type="text" class="form-control" id="pro" name="pro" placeholder="买收益" value="@(Request["sug"]??"5")">
-        </div>
+        <button type="button" class="btn btn-default" v-on:click="showFilters=!showFilters">显示隐藏</button>
         <button type="submit" class="btn btn-default">查询</button>
     </form>
     <table class="table table-bordered table-hover table-striped table-expandable">

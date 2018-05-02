@@ -24,14 +24,16 @@ namespace Boss.Pim.Web.Controllers
 
         public IRepository<NetWorthPeriodAnalyse, Guid> NetWorthPeriodAnalyseRepository { get; set; }
 
-        public ActionResult Index(double y3 = 0.09, double y = 0.09, double y6 = 0.09, double n1 = 0.1, double z = 0.1, double sug = 5, double pro = 5)
+        public ActionResult Index(DateTime? date = null, double y3 = 0.09, double y = 0.09, double y6 = 0.09, double n1 = 0.1, double z = 0.1, double sug = 5, double pro = 5)
         {
+            if (date == null)
+            {
+                date = DateTime.Now;
+            }
             var sql = @"
 DECLARE @PeriodStartDate DATETIME;
 DECLARE @PeriodIncreaseDate DATETIME;
-DECLARE @NetWorthDate DATETIME;
 
-SET @NetWorthDate = GETDATE();
 SET @PeriodIncreaseDate = @NetWorthDate;
 SET @PeriodStartDate = @NetWorthDate;
 
@@ -135,15 +137,15 @@ SELECT *
 INTO #dtGuess
 FROM
 (
-    SELECT fun.TypeName 基金分类,
-           fun.ShortName 基金名称,
-           fun.Code 基金编码,
+    SELECT fun.Code 基金编码,
            CONVERT(VARCHAR(32), val.EstimatedTime, 20) 时间,
            val.ReturnRate 涨幅,
            ROUND(CONVERT(FLOAT, ISNULL(z.Rank, -1)) / z.SameTypeTotalQty, 1) 近1周排比,
            ROUND(CONVERT(FLOAT, ISNULL(n1.Rank, -1)) / n1.SameTypeTotalQty, 1) 近1年排比,
            ROUND((#dtGreat.GreatSale / val.EstimatedUnitNetWorth - 1) * 100, 4) 买收益,
            ROUND((val.EstimatedUnitNetWorth / #dtGreat.GreatBuy - 1) * 100, 4) 买建议,
+           fun.TypeName 基金分类,
+           fun.ShortName 基金名称,
            rate.Title 费率范围,
            rate.Rate 费率,
            y3.Rank 近3月排名,
@@ -308,10 +310,12 @@ FROM
 SELECT *
 FROM #dtWillBuy;
 
-SELECT GreatBuy 最低买入值,
-       GreatSale 最高卖出值,
-       CONVERT(VARCHAR(32),PeriodStartDate,23) 日期,
+SELECT CONVERT(VARCHAR(32), PeriodStartDate, 23) 日期,
+       ROUND((GreatSale / val.EstimatedUnitNetWorth - 1) * 100, 4) 买收益,
+       ROUND((val.EstimatedUnitNetWorth / GreatBuy - 1) * 100, 4) 买建议,
        PeriodDays 阶段天数,
+       GreatBuy 最低买入值,
+       GreatSale 最高卖出值,
        Avg 平均值,
        Later 月末值,
        Max 最大值,
@@ -327,17 +331,20 @@ SELECT GreatBuy 最低买入值,
        PayWaveRate 盈利波动,
        MaxPayCent 最大盈利值,
        MaxLoseCent 最大亏损净值,
-       FundCode
-FROM dbo.FundCenter_NetWorthPeriodAnalyses
-WHERE FundCode IN
+       net.FundCode
+FROM dbo.FundCenter_NetWorthPeriodAnalyses net
+    LEFT JOIN dbo.FundCenter_Valuations val
+        ON net.FundCode = val.FundCode
+WHERE net.FundCode IN
       (
           SELECT 基金编码 FROM #dtWillBuy
       )
       AND DATEDIFF(DAY, PeriodStartDate, @PeriodStartDate) = 0
-ORDER BY FundCode,
+ORDER BY net.FundCode,
          PeriodDays;
 ";
             SQLUtil db = new SQLUtil();
+            db.AddParameter("@NetWorthDate", date.Value);
             db.AddParameter("@y6", y6);
             db.AddParameter("@y3", y3);
             db.AddParameter("@y", y);

@@ -211,6 +211,7 @@
     <Compile Include="Funds\Valuation.cs" />
     <Compile Include="Funds\Values\TradeRateType.cs" />
     <Compile Include="Funds\Values\TradeRecordType.cs" />
+    <Compile Include="ShareProfits\LevelRule.cs" />
     <Compile Include="PimConsts.cs" />
     <Compile Include="PimCoreModule.cs" />
     <Compile Include="AppVersionHelper.cs" />
@@ -253,6 +254,8 @@
     <Compile Include="Sdk\Eastmoney\Responses\ValuationDetailData.cs" />
     <Compile Include="Sdk\Stockstar\Responses\StockstarRatingPoolRow.cs" />
     <Compile Include="Sdk\Stockstar\StockstarResponse.cs" />
+    <Compile Include="ShareProfits\PartnerAgent.cs" />
+    <Compile Include="ShareProfits\Values\LevelType.cs" />
     <Compile Include="Utils\WebSrcUtil.cs" />
     <Compile Include="Validation\ValidationHelper.cs" />
   </ItemGroup>

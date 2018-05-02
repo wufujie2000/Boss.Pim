@@ -1,4 +1,85 @@
 SELECT fun.TypeName,
+       fun.Code,
+       fun.ShortName
+FROM dbo.FundCenter_Funds fun
+WHERE fun.TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创新', '债券创新-场内', '其他' )
+      AND NOT EXISTS
+(
+    SELECT 1
+    FROM dbo.FundCenter_NetWorthPeriodAnalyses net
+    WHERE fun.Code = net.FundCode
+          AND DATEDIFF(DAY, net.PeriodStartDate, GETDATE()) = 0
+          AND net.PeriodDays = 10
+)
+      AND NOT EXISTS
+(
+    SELECT 1
+    FROM dbo.FundCenter_NotTradeFunds net
+    WHERE fun.Code = net.FundCode
+);
+
+
+
+
+
+
+
+SELECT fun.TypeName,
+       fun.Code,
+       fun.ShortName
+FROM dbo.FundCenter_Funds fun
+WHERE fun.TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创新', '债券创新-场内', '其他' )
+      AND NOT EXISTS
+(
+    SELECT 1
+    FROM dbo.FundCenter_PeriodIncreases per
+    WHERE fun.Code = per.FundCode
+          AND (
+                  DATEDIFF(DAY, per.LastModificationTime, GETDATE()) = 0
+                  OR DATEDIFF(DAY, per.CreationTime, GETDATE()) = 0
+              )
+          AND per.Title = 'Z'
+)
+      AND NOT EXISTS
+(
+    SELECT 1
+    FROM dbo.FundCenter_NotTradeFunds net
+    WHERE fun.Code = net.FundCode
+);
+
+
+
+
+
+
+SELECT *
+FROM dbo.FundCenter_NetWorths
+WHERE FundCode IN
+      (
+          SELECT fun.Code
+          FROM dbo.FundCenter_Funds fun
+          WHERE fun.TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创新', '债券创新-场内', '其他' )
+                AND NOT EXISTS
+          (
+              SELECT 1
+              FROM dbo.FundCenter_NetWorthPeriodAnalyses net
+              WHERE fun.Code = net.FundCode
+                    AND DATEDIFF(DAY, net.PeriodStartDate, GETDATE()) = 0
+                    AND net.PeriodDays = 10
+          )
+                AND NOT EXISTS
+          (
+              SELECT 1
+              FROM dbo.FundCenter_NotTradeFunds net
+              WHERE fun.Code = net.FundCode
+          )
+      )
+ORDER BY FundCode,
+         Date DESC;
+
+
+
+SELECT fun.TypeName,
        fun.DkhsCode,
        fun.Code,
        fun.Name,
@@ -45,80 +126,6 @@ HAVING COUNT(1) <
     ORDER BY COUNT(1) DESC
 )
 ORDER BY COUNT(1) DESC;
-
-
-
-
-SELECT fun.TypeName,
-       fun.Code,
-       fun.ShortName
-FROM dbo.FundCenter_Funds fun
-WHERE fun.TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创新', '债券创新-场内', '其他' )
-      AND NOT EXISTS
-(
-    SELECT 1
-    FROM dbo.FundCenter_NetWorthPeriodAnalyses net
-    WHERE fun.Code = net.FundCode
-          AND DATEDIFF(DAY, net.PeriodStartDate, GETDATE()) = 0
-          AND net.PeriodDays = 10
-)
-      AND NOT EXISTS
-(
-    SELECT 1
-    FROM dbo.FundCenter_NotTradeFunds net
-    WHERE fun.Code = net.FundCode
-);
-
-
-SELECT *
-FROM dbo.FundCenter_NetWorths
-WHERE FundCode IN
-      (
-          SELECT fun.Code
-          FROM dbo.FundCenter_Funds fun
-          WHERE fun.TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创新', '债券创新-场内', '其他' )
-                AND NOT EXISTS
-          (
-              SELECT 1
-              FROM dbo.FundCenter_NetWorthPeriodAnalyses net
-              WHERE fun.Code = net.FundCode
-                    AND DATEDIFF(DAY, net.PeriodStartDate, GETDATE()) = 0
-                    AND net.PeriodDays = 10
-          )
-                AND NOT EXISTS
-          (
-              SELECT 1
-              FROM dbo.FundCenter_NotTradeFunds net
-              WHERE fun.Code = net.FundCode
-          )
-      )
-ORDER BY FundCode,Date DESC;
-
-
-
-
-SELECT fun.TypeName,
-       fun.Code,
-       fun.ShortName
-FROM dbo.FundCenter_Funds fun
-WHERE fun.TypeName NOT IN ( '混合-FOF', '货币型', '理财型', '其他创新', '债券创新-场内', '其他' )
-      AND NOT EXISTS
-(
-    SELECT 1
-    FROM dbo.FundCenter_PeriodIncreases per
-    WHERE fun.Code = per.FundCode
-          AND (
-                  DATEDIFF(DAY, per.LastModificationTime, GETDATE()) = 0
-                  OR DATEDIFF(DAY, per.CreationTime, GETDATE()) = 0
-              )
-          AND per.Title = 'Z'
-)
-      AND NOT EXISTS
-(
-    SELECT 1
-    FROM dbo.FundCenter_NotTradeFunds net
-    WHERE fun.Code = net.FundCode
-);
 
 
 

@@ -257,10 +257,10 @@ FROM
     WHERE ISNULL(近3月排比, 1) <= 0.09
           AND ISNULL(近1月排比, 1) <= 0.09
           AND ISNULL(近6月排比, 1) <= 0.09
-          AND ISNULL(近1年排比, -1) <= 0.1
-          AND ISNULL(近1周排比, -1) <= 0.1
-          AND 买建议 > 2.5
-          AND 买收益 > 2.5
+          AND ISNULL(近1年排比, -1) <= 0.5
+          AND ISNULL(近1周排比, -1) <= 0.5
+          AND 买建议 > 2.8
+          AND 买收益 > 2.8
     --AND 评分 > 60
     --AND 中期评分 > 60
     --AND 短期评分 > 60
@@ -279,10 +279,13 @@ FROM
 SELECT *
 FROM #dtWillBuy;
 
-SELECT GreatBuy 最低买入值,
-       GreatSale 最高卖出值,
-       CONVERT(VARCHAR(32),PeriodStartDate,23) 阶段起点日期,
+
+SELECT CONVERT(VARCHAR(32), PeriodStartDate, 23) 日期,
+       ROUND((GreatSale / val.EstimatedUnitNetWorth - 1) * 100, 4) 买收益,
+       ROUND((val.EstimatedUnitNetWorth / GreatBuy - 1) * 100, 4) 买建议,
        PeriodDays 阶段天数,
+       GreatBuy 最低买入值,
+       GreatSale 最高卖出值,
        Avg 平均值,
        Later 月末值,
        Max 最大值,
@@ -298,12 +301,14 @@ SELECT GreatBuy 最低买入值,
        PayWaveRate 盈利波动,
        MaxPayCent 最大盈利值,
        MaxLoseCent 最大亏损净值,
-       FundCode
-FROM dbo.FundCenter_NetWorthPeriodAnalyses
-WHERE FundCode IN
+       net.FundCode
+FROM dbo.FundCenter_NetWorthPeriodAnalyses net
+    LEFT JOIN dbo.FundCenter_Valuations val
+        ON net.FundCode = val.FundCode
+WHERE net.FundCode IN
       (
           SELECT 基金编码 FROM #dtWillBuy
       )
       AND DATEDIFF(DAY, PeriodStartDate, @PeriodStartDate) = 0
-ORDER BY FundCode,
+ORDER BY net.FundCode,
          PeriodDays;
