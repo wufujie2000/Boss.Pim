@@ -49,6 +49,21 @@ WHERE fun.TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒÐÍ', 'Àí²ÆÐÍ', 'ÆäËû´´ÐÂ', 'Õ®È¯´´Ð
 
 
 
+SELECT fun.TypeName,
+       fun.DkhsCode,
+       fun.Code,
+       fun.Name,
+       fun.ShortName
+FROM dbo.FundCenter_Funds fun
+    LEFT JOIN dbo.FundCenter_NetWorths net
+        ON fun.Code = net.FundCode
+WHERE net.Id IS NULL
+      AND TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒÐÍ', 'Àí²ÆÐÍ', 'ÆäËû´´ÐÂ', 'Õ®È¯´´ÐÂ-³¡ÄÚ', 'ÆäËû' )
+      AND NOT EXISTS
+(
+    SELECT 1 FROM dbo.FundCenter_NotTradeFunds nt WHERE nt.FundCode = fun.Code
+);
+
 
 
 
@@ -78,21 +93,6 @@ ORDER BY FundCode,
          Date DESC;
 
 
-
-SELECT fun.TypeName,
-       fun.DkhsCode,
-       fun.Code,
-       fun.Name,
-       fun.ShortName
-FROM dbo.FundCenter_Funds fun
-    LEFT JOIN dbo.FundCenter_NetWorths net
-        ON fun.Code = net.FundCode
-WHERE net.Id IS NULL
-      AND TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒÐÍ', 'Àí²ÆÐÍ', 'ÆäËû´´ÐÂ', 'Õ®È¯´´ÐÂ-³¡ÄÚ', 'ÆäËû' )
-      AND NOT EXISTS
-(
-    SELECT 1 FROM dbo.FundCenter_NotTradeFunds nt WHERE nt.FundCode = fun.Code
-);
 
 
 

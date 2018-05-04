@@ -60,17 +60,6 @@ namespace Boss.Pim.Funds.Services
             return query;
         }
 
-        public List<NetWorth> GetNoExistsNetWorth(List<NetWorth> list, string fundCode)
-        {
-
-            var strList = list.Select(c => c.Date).Distinct().ToList();
-            var dbExistsList = NetWorthRepository.GetAll().Where(s => strList.Contains(s.Date) && s.FundCode == fundCode)
-                .Select(b => b.Date).Distinct().ToList();
-            List<NetWorth> notExistsList = new List<NetWorth>();
-            ListAddIfExists(list.Where(a => !dbExistsList.Contains(a.Date)).Distinct().ToList(), notExistsList);
-            return notExistsList;
-        }
-
         public async Task Insert(List<NetWorth> notExistsList)
         {
             int size = 50;
@@ -220,16 +209,6 @@ namespace Boss.Pim.Funds.Services
             foreach (var item in list)
             {
                 if (!existsList.Exists(a => a.Code == item.Code))
-                {
-                    existsList.Add(item);
-                }
-            }
-        }
-        private void ListAddIfExists(List<NetWorth> list, List<NetWorth> existsList)
-        {
-            foreach (var item in list)
-            {
-                if (!existsList.Exists(a => a.Date == item.Date))
                 {
                     existsList.Add(item);
                 }

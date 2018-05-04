@@ -28,19 +28,7 @@ namespace Boss.Pim.Funds
         public async Task Download3Days()
         {
             Logger.Info("¿ªÊ¼ÏÂÔØ¸üÐÂ NetWorth ");
-            var list = await AsyncQueryableExecuter.ToListAsync(
-                 FundManager.GetQuery().Select(a => new { a.Code, a.DkhsCode })
-                 );
-            List<NetWorth> notExistsList = new List<NetWorth>();
-            foreach (var fund in list)
-            {
-                var willExecList = await GetNoExistsNetWorth(fund.Code, fund.DkhsCode, 2);
-                if (willExecList != null && willExecList.Count > 0)
-                {
-                    notExistsList.AddRange(willExecList);
-                }
-            }
-            await FundManager.Insert(notExistsList);
+            await DownloadCheck(5);
             Logger.Info("¸üÐÂ NetWorth Íê³É");
         }
 
@@ -55,7 +43,7 @@ namespace Boss.Pim.Funds
             List<NetWorth> notExistsList = new List<NetWorth>();
             foreach (var fund in list)
             {
-                var willExecList = await GetNoExistsNetWorth(fund.Code, fund.DkhsCode, size, page);
+                var willExecList = await NetWorthManager.GetNoExistsNetWorth(fund.Code, fund.DkhsCode, size, page);
                 if (willExecList != null && willExecList.Count > 0)
                 {
                     notExistsList.AddRange(willExecList);
@@ -65,6 +53,11 @@ namespace Boss.Pim.Funds
         }
 
         public async Task DownloadCheck()
+        {
+            await DownloadCheck(120);
+        }
+
+        private async Task DownloadCheck(int days)
         {
             var sql = @"
 SELECT DISTINCT
@@ -79,7 +72,7 @@ WHERE fun.TypeName NOT IN ( '»ìºÏ-FOF', '»õ±ÒÐÍ', 'Àí²ÆÐÍ', 'ÆäËû´´ÐÂ', 'Õ®È¯´´Ð
     SELECT 1 FROM dbo.FundCenter_NotTradeFunds nt WHERE nt.FundCode = fun.Code
 )
       AND (
-              Date >= GETDATE() - 120
+              Date >= GETDATE() - @days
               OR net.Id IS NULL
           )
 GROUP BY fun.Code,
@@ -89,21 +82,21 @@ HAVING COUNT(1) <
     SELECT TOP 1
         COUNT(1)
     FROM dbo.FundCenter_NetWorths
-    WHERE Date >= GETDATE() - 120
+    WHERE Date >= GETDATE() - @days
     GROUP BY FundCode
     ORDER BY COUNT(1) DESC
 )
 ";
             using (var conn = new SqlConnection(SQLUtil.DefaultConnStr))
             {
-                var list = conn.Query(sql);
+                var list = conn.Query(sql, new { days = days });
 
                 List<NetWorth> notExistsList = new List<NetWorth>();
                 foreach (var fund in list)
                 {
                     string fundCode = fund.Code;
                     string dkhsCode = fund.DkhsCode;
-                    var willExecList = await GetNoExistsNetWorth(fundCode, dkhsCode, 100);
+                    var willExecList = await NetWorthManager.GetNoExistsNetWorth(fundCode, dkhsCode, days);
                     if (willExecList != null && willExecList.Count > 0)
                     {
                         notExistsList.AddRange(willExecList);
@@ -111,24 +104,6 @@ HAVING COUNT(1) <
                 }
                 await FundManager.Insert(notExistsList);
             }
-        }
-
-        public async Task<List<NetWorth>> GetNoExistsNetWorth(string fundCode, string dkhsCode, int sise, int page = 1)
-        {
-            List<NetWorth> result = null;
-            try
-            {
-                var modellist = await NetWorthManager.DownloadNetWorthByDkhs(fundCode, dkhsCode, sise, page);
-                if (modellist.Count > 0)
-                {
-                    result = FundManager.GetNoExistsNetWorth(modellist, fundCode);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Error(fundCode + " " + e.Message, e);
-            }
-            return result;
         }
 
         #region ³õÊ¼»¯ÏÂÔØ

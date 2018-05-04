@@ -24,8 +24,8 @@ namespace Boss.Pim.Funds
     {
         public WebSrcUtil WebSrcUtil { get; set; }
         public IRepository<NotTradeFund, Guid> NotTradeFundRepository { get; set; }
-        public FundManager FundDomainService { get; set; }
-
+        public FundManager FundManager { get; set; }
+        public NetWorthManager NetWorthManager { get; set; }
 
         public FundAppService(IRepository<Fund> repository) : base(repository)
         {
@@ -83,7 +83,7 @@ namespace Boss.Pim.Funds
             }
             if (modellist.Count > 0)
             {
-                await FundDomainService.CheckInsertFunds(modellist);
+                await FundManager.CheckInsertFunds(modellist);
             }
         }
 
@@ -108,9 +108,12 @@ namespace Boss.Pim.Funds
                     Logger.Info("更新所有基金 完成");
                     return;
                 }
-                await InsertOrUpdateAnalyses(data);
 
                 await InsertFunds(data);
+
+                await InsertOrUpdateAnalyses(data);
+
+                await InsertNetWorths(data);
 
                 if (data.current_page > data.total_page || data.results.Length < size)
                 {
@@ -119,6 +122,36 @@ namespace Boss.Pim.Funds
                 }
                 page++;
             }
+        }
+
+        private async Task InsertNetWorths(DkhsResponse<DkhsFundResult> data)
+        {
+            List<NetWorth> notExistsList = new List<NetWorth>();
+            foreach (var item in data.results)
+            {
+                var date = item.tradedate.TryToDateTimeOrNull();
+                var unitNetWorth = item.net_value;
+                var dailyGrowthRate = item.percent_day;
+                if (date == null || unitNetWorth == null || dailyGrowthRate == null)
+                {
+                    continue;
+                }
+                var netWorth = new NetWorth
+                {
+                    AccumulatedNetWorth = item.net_cumulative.GetValueOrDefault(),
+                    DailyGrowthRate = dailyGrowthRate.Value,
+                    Date = date.Value,
+                    FundCode = item.code,
+                    UnitNetWorth = unitNetWorth.Value
+                };
+                var willExecList = NetWorthManager.GetNoExistsNetWorth(new[] { netWorth }, item.code);
+                if (willExecList != null && willExecList.Count > 0)
+                {
+                    notExistsList.AddRange(willExecList);
+                }
+
+            }
+            await FundManager.Insert(notExistsList);
         }
 
         private async Task InsertFunds(DkhsResponse<DkhsFundResult> data)
@@ -136,8 +169,30 @@ namespace Boss.Pim.Funds
                     TypeName = item.symbol_stype_display,
                     ShortNameInitials = item.chi_spell,
                 });
+
+                var date = item.tradedate.TryToDateTimeOrNull();
+                var unitNetWorth = item.net_value;
+                var dailyGrowthRate = item.percent_day;
+                if (date == null || unitNetWorth == null || dailyGrowthRate == null)
+                {
+                    continue;
+                }
+                var netWorth = new NetWorth
+                {
+                    AccumulatedNetWorth = item.net_cumulative.GetValueOrDefault(),
+                    DailyGrowthRate = dailyGrowthRate.Value,
+                    Date = date.Value,
+                    FundCode = item.code,
+                    UnitNetWorth = unitNetWorth.Value
+                };
+                var willExecList = NetWorthManager.GetNoExistsNetWorth(new[] { netWorth }, item.code);
+                if (willExecList != null && willExecList.Count > 0)
+                {
+                    await FundManager.Insert(willExecList);
+                }
+
             }
-            await FundDomainService.CheckInsertFunds(fundList);
+            await FundManager.CheckInsertFunds(fundList);
         }
 
         private async Task InsertOrUpdateAnalyses(DkhsResponse<DkhsFundResult> data)
@@ -168,7 +223,7 @@ namespace Boss.Pim.Funds
                     Experience = item.experience ?? -1
                 });
             }
-            await FundDomainService.InsertOrUpdateAnalyses(analyseList);
+            await FundManager.InsertOrUpdateAnalyses(analyseList);
         }
     }
 }

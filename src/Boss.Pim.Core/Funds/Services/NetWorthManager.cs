@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Abp.Dependency;
+using Abp.Domain.Repositories;
 using Boss.Pim.Extensions;
 using Boss.Pim.Sdk.Dkhs;
 using Boss.Pim.Sdk.Dkhs.Responses;
@@ -12,6 +15,7 @@ namespace Boss.Pim.Funds.Services
 {
     public class NetWorthManager : PimDomainServiceBase, ISingletonDependency
     {
+        public IRepository<NetWorth, Guid> NetWorthRepository { get; set; }
         public WebSrcUtil WebSrcUtil { get; set; }
         //public async Task<List<NetWorth>> DownloadNetWorth(string fundCode, string range)
         //{
@@ -87,6 +91,46 @@ namespace Boss.Pim.Funds.Services
                 }
             }
             return modellist;
+        }
+
+
+        public List<NetWorth> GetNoExistsNetWorth(ICollection<NetWorth> list, string fundCode)
+        {
+            var strList = list.Select(c => c.Date).Distinct().ToList();
+            var dbExistsList = NetWorthRepository.GetAll().Where(s => strList.Contains(s.Date) && s.FundCode == fundCode)
+                .Select(b => b.Date).Distinct().ToList();
+            List<NetWorth> notExistsList = new List<NetWorth>();
+            ListAddIfExists(list.Where(a => !dbExistsList.Contains(a.Date)).Distinct().ToList(), notExistsList);
+            return notExistsList;
+        }
+
+        private void ListAddIfExists(List<NetWorth> list, List<NetWorth> existsList)
+        {
+            foreach (var item in list)
+            {
+                if (!existsList.Exists(a => a.Date == item.Date))
+                {
+                    existsList.Add(item);
+                }
+            }
+        }
+
+        public async Task<List<NetWorth>> GetNoExistsNetWorth(string fundCode, string dkhsCode, int sise, int page = 1)
+        {
+            List<NetWorth> result = null;
+            try
+            {
+                var modellist = await DownloadNetWorthByDkhs(fundCode, dkhsCode, sise, page);
+                if (modellist.Count > 0)
+                {
+                    result = GetNoExistsNetWorth(modellist, fundCode);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error(fundCode + " " + e.Message, e);
+            }
+            return result;
         }
     }
 }

@@ -46,15 +46,15 @@
             </div>
             <div class="form-group">
                 <label>近6月排名比</label>
-                <input type="text" class="form-control" id="y6" name="y6" placeholder="近6月排名比" value="@(Request["y6"]??"0.09")">
+                <input type="text" class="form-control" id="y6" name="y6" placeholder="近6月排名比" value="@(Request["y6"]??"0.1")">
             </div>
             <div class="form-group">
                 <label>近1年排名比</label>
-                <input type="text" class="form-control" id="n1" name="n1" placeholder="近1年排名比" value="@(Request["n1"]??"0.1")">
+                <input type="text" class="form-control" id="n1" name="n1" placeholder="近1年排名比" value="@(Request["n1"]??"0.5")">
             </div>
             <div class="form-group">
                 <label>近1周排名比</label>
-                <input type="text" class="form-control" id="z" name="z" placeholder="近1周排名比" value="@(Request["n1"]??"0.1")">
+                <input type="text" class="form-control" id="z" name="z" placeholder="近1周排名比" value="@(Request["n1"]??"0.5")">
             </div>
             <div class="form-group">
                 <label>买建议</label>
@@ -89,11 +89,6 @@
                         if (col.ColumnName == "基金编码")
                         {
                             <td>
-                                <a href='https://m.1234567.com.cn/index.html?page=jjxq&code=@fundCode' target="_blank">天天基金</a>
-                                @*<a href='https://m.howbuy.com/fund/@(fundCode)/' target="_blank">掌上基金</a>*@
-                                <a href='https://www.dkhs.com/s/@dkhsCode' target="_blank">基金决策宝</a>
-                                <a href="https://www.dkhs.com/symbols/funds/diagnosis/detail/@dkhsCode/" target="_blank">诊断</a>
-                                <a href="/Fund/Buy?fundCode=@fundCode" target="_blank">购买</a>
                                 @Html.Raw(row[col.ColumnName])
                             </td>
                         }
@@ -108,10 +103,15 @@
                                 <a href=' https://www.dkhs.com/s/@dkhsCode/asset_allocation/' target="_blank">资产配置</a>
                             </td>
                         }
-                        else if (col.ColumnName == "估30天建议")
+                        else if (col.ColumnName == "买建议")
                         {
                             <td>
                                 @Html.Raw(row[col.ColumnName])
+                                <a href='https://m.1234567.com.cn/index.html?page=jjxq&code=@fundCode' target="_blank">天天基金</a>
+                                @*<a href='https://m.howbuy.com/fund/@(fundCode)/' target="_blank">掌上基金</a>*@
+                                <a href='https://www.dkhs.com/s/@dkhsCode' target="_blank">基金决策宝</a>
+                                <a href="https://www.dkhs.com/symbols/funds/diagnosis/detail/@dkhsCode/" target="_blank">诊断</a>
+                                <a href="/Fund/Buy?fundCode=@fundCode" target="_blank">购买</a>
                             </td>
                         }
                         else
